@@ -1,5 +1,68 @@
 import React from "react";
 
+//armour
+// how to generate sprites
+const races = {
+  orc: {
+    sprite: "",
+    movement_speed_modifier: 0.1,
+    attack_speed_modifier: 0.1,
+    projectile_modifier: 0.1,
+    melee_modifier: 0.1,
+    magic_modifier: 0.1,
+    health_modifier: 0.1,
+  },
+};
+const weapons = {
+  spear: {
+    damage: 10,
+    attack_speed: 20,
+    range: 100,
+    type: "projectile",
+  },
+};
+
+const saveState = {
+  you: {
+    movement_speed: 20,
+    health: 100,
+    attack_speed: 20,
+    weapon: "spear",
+    name: "Thomas",
+    race: "orc",
+  },
+  allies: [
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "spear",
+      name: "James",
+      race: "orc",
+    },
+  ],
+  enemies: [
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "spear",
+      name: "Demon",
+      race: "orc",
+    },
+  ],
+};
+
+function makeNewCreature(options) {}
+
+function spawnAll() {
+  // make you
+  // make allies
+  // make enemies (similar to your party size)
+  // random creatures (neutral)
+  const creature = makeCreature();
+}
+
 class Game extends React.Component {
   componentDidMount = () => {
     //Aliases
@@ -73,6 +136,28 @@ class Game extends React.Component {
       explorer.vy = 0;
       gameScene.addChild(explorer);
 
+      const spawns = [];
+
+      // spawn allies
+      saveState.allies.forEach((ally) => {
+        const newSpawn = new Sprite(id["explorer.png"]);
+        newSpawn.x = 68;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2;
+        newSpawn.vx = 0;
+        newSpawn.vy = 0;
+        gameScene.addChild(newSpawn);
+      });
+
+      // spawn enemies
+      saveState.enemies.forEach((ally) => {
+        const newSpawn = new Sprite(id["explorer.png"]);
+        newSpawn.x = 468;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2;
+        newSpawn.vx = 0;
+        newSpawn.vy = 0;
+        gameScene.addChild(newSpawn);
+      });
+
       //Treasure
       treasure = new Sprite(id["treasure.png"]);
       treasure.x = gameScene.width - treasure.width - 48;
@@ -80,47 +165,47 @@ class Game extends React.Component {
       gameScene.addChild(treasure);
 
       //Make the blobs
-      let numberOfBlobs = 6,
-        spacing = 48,
-        xOffset = 150,
-        speed = 2,
-        direction = 1;
-
-      //An array to store all the blob monsters
-      blobs = [];
-
-      //Make as many blobs as there are `numberOfBlobs`
-      for (let i = 0; i < numberOfBlobs; i++) {
-        //Make a blob
-        const blob = new Sprite(id["blob.png"]);
-
-        //Space each blob horizontally according to the `spacing` value.
-        //`xOffset` determines the point from the left of the screen
-        //at which the first blob should be added
-        const x = spacing * i + xOffset;
-
-        //Give the blob a random y position
-        const y = randomInt(0, app.stage.height - blob.height);
-
-        //Set the blob's position
-        blob.x = x;
-        blob.y = y;
-
-        //Set the blob's vertical velocity. `direction` will be either `1` or
-        //`-1`. `1` means the enemy will move down and `-1` means the blob will
-        //move up. Multiplying `direction` by `speed` determines the blob's
-        //vertical direction
-        blob.vy = speed * direction;
-
-        //Reverse the direction for the next blob
-        direction *= -1;
-
-        //Push the blob into the `blobs` array
-        blobs.push(blob);
-
-        //Add the blob to the `gameScene`
-        gameScene.addChild(blob);
-      }
+      // let numberOfBlobs = 6,
+      //   spacing = 48,
+      //   xOffset = 150,
+      //   speed = 2,
+      //   direction = 1;
+      //
+      // //An array to store all the blob monsters
+      // blobs = [];
+      //
+      // //Make as many blobs as there are `numberOfBlobs`
+      // for (let i = 0; i < numberOfBlobs; i++) {
+      //   //Make a blob
+      //   const blob = new Sprite(id["blob.png"]);
+      //
+      //   //Space each blob horizontally according to the `spacing` value.
+      //   //`xOffset` determines the point from the left of the screen
+      //   //at which the first blob should be added
+      //   const x = spacing * i + xOffset;
+      //
+      //   //Give the blob a random y position
+      //   const y = randomInt(0, app.stage.height - blob.height);
+      //
+      //   //Set the blob's position
+      //   blob.x = x;
+      //   blob.y = y;
+      //
+      //   //Set the blob's vertical velocity. `direction` will be either `1` or
+      //   //`-1`. `1` means the enemy will move down and `-1` means the blob will
+      //   //move up. Multiplying `direction` by `speed` determines the blob's
+      //   //vertical direction
+      //   blob.vy = speed * direction;
+      //
+      //   //Reverse the direction for the next blob
+      //   direction *= -1;
+      //
+      //   //Push the blob into the `blobs` array
+      //   blobs.push(blob);
+      //
+      //   //Add the blob to the `gameScene`
+      //   gameScene.addChild(blob);
+      // }
 
       //Create the health bar
       healthBar = new Container();
@@ -289,30 +374,30 @@ class Game extends React.Component {
       let explorerHit = false;
 
       //Loop through all the sprites in the `enemies` array
-      blobs.forEach(function (blob) {
-        //Move the blob
-        blob.y += blob.vy;
-
-        //Check the blob's screen boundaries
-        const blobHitsWall = contain(blob, {
-          x: 28,
-          y: 10,
-          width: 488,
-          height: 480,
-        });
-
-        //If the blob hits the top or bottom of the stage, reverse
-        //its direction
-        if (blobHitsWall === "top" || blobHitsWall === "bottom") {
-          blob.vy *= -1;
-        }
-
-        //Test for a collision. If any of the enemies are touching
-        //the explorer, set `explorerHit` to `true`
-        if (hitTestRectangle(explorer, blob)) {
-          explorerHit = true;
-        }
-      });
+      // blobs.forEach(function (blob) {
+      //   //Move the blob
+      //   blob.y += blob.vy;
+      //
+      //   //Check the blob's screen boundaries
+      //   const blobHitsWall = contain(blob, {
+      //     x: 28,
+      //     y: 10,
+      //     width: 488,
+      //     height: 480,
+      //   });
+      //
+      //   //If the blob hits the top or bottom of the stage, reverse
+      //   //its direction
+      //   if (blobHitsWall === "top" || blobHitsWall === "bottom") {
+      //     blob.vy *= -1;
+      //   }
+      //
+      //   //Test for a collision. If any of the enemies are touching
+      //   //the explorer, set `explorerHit` to `true`
+      //   if (hitTestRectangle(explorer, blob)) {
+      //     explorerHit = true;
+      //   }
+      // });
 
       //If the explorer is hit...
       if (explorerHit) {
