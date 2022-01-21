@@ -21,7 +21,8 @@ class Game extends React.Component {
       transparent: false,
       resolution: 1,
     });
-
+    app.stage.interactive = true;
+    app.stage.interactiveChildren = true;
     //Add the canvas that Pixi automatically created for you to the HTML document
     document.body.appendChild(app.view);
 
@@ -44,7 +45,8 @@ class Game extends React.Component {
       gameOverScene,
       enemies,
       id;
-
+    var bullets = [];
+    var bulletSpeed = 5;
     function setup() {
       //Make the game scene and add it to the stage
       gameScene = new Container();
@@ -214,12 +216,47 @@ class Game extends React.Component {
           explorer.vy = 0;
         }
       };
+      app.stage.pointerdown = mousedownEventHandler;
+
+      function mousedownEventHandler(e) {
+        //get the data
+        console.log("Mouse Down: button is:");
+      }
+      console.log("huh");
+      app.stage.on("mousedown", function (e) {
+        console.log("mousedown");
+        shoot(explorer.rotation, {
+          x: explorer.position.x + Math.cos(explorer.rotation) * 20,
+          y: explorer.position.y + Math.sin(explorer.rotation) * 20,
+        });
+      });
+
+      var carrotTex = PIXI.Texture.fromImage("carrot.png");
+      function shoot(rotation, startPosition) {
+        var bullet = new PIXI.Sprite(carrotTex);
+        console.log("hello");
+        bullet.position.x = startPosition.x;
+        bullet.position.y = startPosition.y;
+        bullet.rotation = rotation;
+        app.stage.addChild(bullet);
+        console.log(bullet);
+        bullets.push(bullet);
+      }
 
       //Set the game state
       state = play;
 
       //Start the game loop
       app.ticker.add((delta) => gameLoop(delta));
+    }
+
+    function rotateToPoint(mx, my, px, py) {
+      var self = this;
+      var dist_Y = my - py;
+      var dist_X = mx - px;
+      var angle = Math.atan2(dist_Y, dist_X);
+      //var degrees = angle * 180/ Math.PI;
+      return angle;
     }
 
     function gameLoop(delta) {
@@ -231,6 +268,18 @@ class Game extends React.Component {
       //use the explorer's velocity to make it move
       explorer.x += explorer.vx;
       explorer.y += explorer.vy;
+
+      explorer.rotation = rotateToPoint(
+        app.renderer.plugins.interaction.mouse.global.x,
+        app.renderer.plugins.interaction.mouse.global.y,
+        explorer.position.x,
+        explorer.position.y
+      );
+
+      for (var b = bullets.length - 1; b >= 0; b--) {
+        bullets[b].position.x += Math.cos(bullets[b].rotation) * bulletSpeed;
+        bullets[b].position.y += Math.sin(bullets[b].rotation) * bulletSpeed;
+      }
 
       //Contain the explorer inside the area of the dungeon
       contain(explorer, { x: 28, y: 10, width: 488, height: 480 });
