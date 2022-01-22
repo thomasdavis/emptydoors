@@ -91,6 +91,8 @@ function spawnAll() {
   const creature = makeCreature();
 }
 
+let carrotTex = null; // PIXI.Texture.fromImage("spear.png");
+
 class Game extends React.Component {
   componentDidMount = () => {
     //Aliases
@@ -103,6 +105,18 @@ class Game extends React.Component {
       Sprite = PIXI.Sprite,
       Text = PIXI.Text,
       TextStyle = PIXI.TextStyle;
+    function shoot(rotation, startPosition, spawn, sprite) {
+      var bullet = sprite;
+      bullet.position.x = startPosition.x;
+      bullet.position.y = startPosition.y;
+      console.log({ rotation });
+      bullet.rotation = rotation;
+      bullet.spawn = spawn; // attach the owner of the attack
+      app.stage.addChild(bullet);
+      bullets.push(bullet);
+    }
+
+    carrotTex = PIXI.Texture.fromImage("spear.png");
 
     //Create a Pixi Application
     const app = new Application({
@@ -343,31 +357,22 @@ class Game extends React.Component {
       };
 
       app.stage.on("mousedown", function (e) {
+        var bullet = new PIXI.Sprite(carrotTex);
+
         shoot(
           explorer.rotation,
           {
             x: explorer.position.x + Math.cos(explorer.rotation) * 20,
             y: explorer.position.y + Math.sin(explorer.rotation) * 20,
           },
-          explorer
+          explorer,
+          bullet
         );
       });
 
       // var carrotTex = PIXI.Sprite(
       //   PIXI.Loader.shared.resources["spear.png"].texture
       // );
-      var carrotTex = PIXI.Texture.fromImage("spear.png");
-
-      function shoot(rotation, startPosition, spawn) {
-        var bullet = new PIXI.Sprite(carrotTex);
-        bullet.position.x = startPosition.x;
-        bullet.position.y = startPosition.y;
-        console.log({ rotation });
-        bullet.rotation = rotation;
-        bullet.spawn = spawn; // attach the owner of the attack
-        app.stage.addChild(bullet);
-        bullets.push(bullet);
-      }
 
       //Set the game state
       state = play;
@@ -402,6 +407,23 @@ class Game extends React.Component {
         explorer.position.y
       );
 
+      // make cunts shoot
+      // function shoot(rotation, startPosition, spawn) {
+      //   var bullet = new PIXI.Sprite(carrotTex);
+      //   bullet.position.x = startPosition.x;
+      //   bullet.position.y = startPosition.y;
+      //   console.log({ rotation });
+      //   bullet.rotation = rotation;
+      //   bullet.spawn = spawn; // attach the owner of the attack
+      //   app.stage.addChild(bullet);
+      //   bullets.push(bullet);
+      // }
+      spawns.forEach((spawn, spawnIndex) => {
+        var bullet = new PIXI.Sprite(carrotTex);
+
+        shoot(1, spawn, spawn, bullet);
+      });
+
       // loop through projectiles
       for (var b = bullets.length - 1; b >= 0; b--) {
         const bullet = bullets[b];
@@ -415,7 +437,7 @@ class Game extends React.Component {
           bullets.splice(b, 1);
         }
         //  then loop through potential targets
-        spawns.forEach((spawn) => {
+        spawns.forEach((spawn, spawnIndex) => {
           // hit collision
           // console.log(spawn.data);
           if (spawn.data.status === "ally") {
@@ -437,9 +459,23 @@ class Game extends React.Component {
             spawn.data.health = spawn.data.health - weapon.damage;
             console.log("health", spawn.data.health);
             if (spawn.data.health <= 0) {
-              spawn.parent.removeChild(spawn);
+              if (spawn.parent) {
+                spawns.splice(spawnIndex, 1);
+                spawn.parent.removeChild(spawn);
+              }
             }
           }
+
+          const enemies = spawns.filter((sa) => {
+            return sa.data.status === "enemy";
+            // console.log({ sa });
+          });
+
+          if (enemies.length === 0) {
+            alert("round over");
+          }
+
+          // console.log({ spawns });
           // cant shoot allies
 
           // console.log({ spawn, bullet, didBulletHit });
