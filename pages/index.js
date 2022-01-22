@@ -316,7 +316,6 @@ class Game extends React.Component {
       TextStyle = PIXI.TextStyle;
     function shoot(rotation, startPosition, spawn, sprite) {
       // createjs.Sound.play("fireball");
-      createjs.Sound.play(spawn.data.weapon);
       spawn.data.last_attack_tick += 1;
       if (spawn.data.last_attack_tick > 60) {
         var bullet = new PIXI.Sprite(carrotTex);
@@ -339,6 +338,7 @@ class Game extends React.Component {
 
         bullet.spawn = spawn; // attach the owner of the attack
         app.stage.addChild(bullet);
+        createjs.Sound.play(spawn.data.weapon);
         bullets.push(bullet);
         spawn.data.last_attack_tick = 0;
       } else {
