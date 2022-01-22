@@ -47,29 +47,26 @@ const races = {
 };
 
 const weapons = {
-  spear: {
-    damage: 10,
-    attack_speed: 20,
-    range: 100,
-    type: "projectile",
-  },
   magic: {
-    damage: 10,
-    attack_speed: 20,
+    damage: 20,
+    attack_speed: 40,
     range: 100,
+    attack_time: 10,
     type: "projectile",
   },
   axe: {
     damage: 10,
-    attack_speed: 20,
-    range: 100,
-    type: "melee",
-  },
-  arrow: {
-    damage: 10,
-    attack_speed: 20,
+    attack_speed: 80,
     range: 100,
     type: "projectile",
+    attack_time: 40,
+  },
+  arrow: {
+    damage: 24,
+    attack_speed: 100,
+    range: 100,
+    type: "projectile",
+    attack_time: 20,
   },
 };
 
@@ -165,10 +162,10 @@ const saveState = {
       movement_speed: 20,
       health: 100,
       attack_speed: 20,
-      weapon: "axe",
+      weapon: "magic",
       name: "Roland",
       race: "human",
-      type: "warrior",
+      type: "mage",
       status: "enemy",
       uid: "asxxxxd",
       last_attack_tick: 0,
@@ -287,7 +284,7 @@ class Game extends React.Component {
     createjs.Sound.alternateExtensions = ["mp3"];
     createjs.Sound.registerSound({ src: "spear.mp3", id: "spear" });
     createjs.Sound.registerSound({ src: "axe.mp3", id: "axe" });
-    createjs.Sound.registerSound({ src: "fireball.mp3", id: "fireball" });
+    createjs.Sound.registerSound({ src: "magic.mp3", id: "magic" });
     createjs.Sound.registerSound({ src: "arrow.mp3", id: "arrow" });
   };
   componentDidUpdate = (prevProps, prevState) => {
@@ -317,7 +314,10 @@ class Game extends React.Component {
     function shoot(rotation, startPosition, spawn, sprite) {
       // createjs.Sound.play("fireball");
       spawn.data.last_attack_tick += 1;
-      if (spawn.data.last_attack_tick > 60) {
+      if (
+        spawn.data.last_attack_tick >
+        180 - weapons[spawn.data.weapon].attack_time
+      ) {
         var bullet = new PIXI.Sprite(carrotTex);
         if (spawn.data.weapon === "axe") {
           bullet = new PIXI.Sprite(PIXI.Texture.fromImage("axe.png"));
@@ -338,7 +338,15 @@ class Game extends React.Component {
 
         bullet.spawn = spawn; // attach the owner of the attack
         app.stage.addChild(bullet);
-        createjs.Sound.play(spawn.data.weapon);
+        console.log("make some fucking noise", spawn.data.weapon);
+        console.log("also who am i", spawn.data.status);
+        if (bullet.spawn.data.status === "me") {
+          const soundObject = createjs.Sound.play(spawn.data.weapon);
+          soundObject.volume = Math.random() * 100;
+        } else {
+          const soundObject = createjs.Sound.play(spawn.data.weapon);
+          soundObject.volume = Math.random() * 100;
+        }
         bullets.push(bullet);
         spawn.data.last_attack_tick = 0;
       } else {
