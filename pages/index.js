@@ -27,6 +27,24 @@ const weapons = {
     range: 100,
     type: "projectile",
   },
+  magic: {
+    damage: 10,
+    attack_speed: 20,
+    range: 100,
+    type: "projectile",
+  },
+  axe: {
+    damage: 10,
+    attack_speed: 20,
+    range: 100,
+    type: "melee",
+  },
+  arrow: {
+    damage: 10,
+    attack_speed: 20,
+    range: 100,
+    type: "projectile",
+  },
 };
 
 const saveState = {
@@ -34,10 +52,14 @@ const saveState = {
     movement_speed: 20,
     health: 100,
     attack_speed: 20,
-    weapon: "spear",
+    weapon: "magic",
     name: "Thomas",
     race: "orc",
     status: "me",
+    team: "ally",
+    uid: "asd",
+    last_attack_tick: 0,
+    last_velocity_tick: 0,
   },
   allies: [
     {
@@ -45,18 +67,26 @@ const saveState = {
       health: 100,
       attack_speed: 20,
       weapon: "spear",
-      name: "James",
+      name: "Jemel",
       race: "orc",
       status: "ally",
+      uid: "asdd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "ally",
     },
     {
       movement_speed: 20,
       health: 100,
       attack_speed: 20,
-      weapon: "spear",
+      weapon: "magic",
       name: "James",
       race: "orc",
       status: "ally",
+      uid: "asd1212",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "ally",
     },
   ],
   enemies: [
@@ -64,23 +94,56 @@ const saveState = {
       movement_speed: 20,
       health: 100,
       attack_speed: 20,
-      weapon: "spear",
-      name: "Demon",
+      weapon: "axe",
+      name: "Roland",
       race: "orc",
       status: "enemy",
+      uid: "asxxxxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
     },
     {
       movement_speed: 20,
       health: 100,
       attack_speed: 20,
-      weapon: "spear",
-      name: "Demon",
+      weapon: "arrow",
+      name: "Curry",
       race: "orc",
       status: "enemy",
+      uid: "asx22xxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
     },
   ],
 };
+function degrees_to_radians(degrees) {
+  var pi = Math.PI;
+  return degrees * (pi / 180);
+}
+function angle(originX, originY, targetX, targetY) {
+  var dx = originX - targetX;
+  var dy = originY - targetY;
 
+  // var theta = Math.atan2(dy, dx); // [0, Ⲡ] then [-Ⲡ, 0]; clockwise; 0° = west
+  // theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; clockwise; 0° = west
+  // if (theta < 0) theta += 360; // [0, 360]; clockwise; 0° = west
+
+  var theta = Math.atan2(-dy, dx); // [0, Ⲡ] then [-Ⲡ, 0]; anticlockwise; 0° = west
+  theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; anticlockwise; 0° = west
+  if (theta < 0) theta += 360; // [0, 360]; anticlockwise; 0° = west
+
+  // var theta = Math.atan2(dy, -dx); // [0, Ⲡ] then [-Ⲡ, 0]; anticlockwise; 0° = east
+  // theta *= 180 / Math.PI;          // [0, 180] then [-180, 0]; anticlockwise; 0° = east
+  // if (theta < 0) theta += 360;     // [0, 360]; anticlockwise; 0° = east
+
+  // var theta = Math.atan2(-dy, -dx); // [0, Ⲡ] then [-Ⲡ, 0]; clockwise; 0° = east
+  // theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; clockwise; 0° = east
+  // if (theta < 0) theta += 360; // [0, 360]; clockwise; 0° = east
+
+  return theta;
+}
 function makeNewCreature(options) {}
 
 function spawnAll() {
@@ -106,14 +169,34 @@ class Game extends React.Component {
       Text = PIXI.Text,
       TextStyle = PIXI.TextStyle;
     function shoot(rotation, startPosition, spawn, sprite) {
-      var bullet = sprite;
-      bullet.position.x = startPosition.x;
-      bullet.position.y = startPosition.y;
-      console.log({ rotation });
-      bullet.rotation = rotation;
-      bullet.spawn = spawn; // attach the owner of the attack
-      app.stage.addChild(bullet);
-      bullets.push(bullet);
+      console.log("a", spawn.data.last_attack_tick);
+      spawn.data.last_attack_tick += 1;
+      if (spawn.data.last_attack_tick > 60) {
+        var bullet = new PIXI.Sprite(carrotTex);
+        if (spawn.data.weapon === "axe") {
+          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("axe.png"));
+        }
+        if (spawn.data.weapon === "spear") {
+          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("spear.png"));
+        }
+        if (spawn.data.weapon === "magic") {
+          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("fireball.png"));
+        }
+        if (spawn.data.weapon === "arrow") {
+          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("arrow.png"));
+        }
+        bullet.position.x = startPosition.x;
+        bullet.position.y = startPosition.y;
+        spawn.rotation = rotation;
+        bullet.rotation = rotation;
+
+        bullet.spawn = spawn; // attach the owner of the attack
+        app.stage.addChild(bullet);
+        bullets.push(bullet);
+        spawn.data.last_attack_tick = 0;
+      } else {
+        // spawn.data.last_attack_tick = 0;
+      }
     }
 
     carrotTex = PIXI.Texture.fromImage("spear.png");
@@ -133,6 +216,9 @@ class Game extends React.Component {
 
     loader
       .add("spear.png")
+      .add("fireball.png")
+      .add("arrow.png")
+      .add("axe.png")
       .add("carrot.png")
       .add("door.png")
       .add("treasure.png")
@@ -188,7 +274,7 @@ class Game extends React.Component {
       explorer.vx = 0;
       explorer.vy = 0;
       explorer.data = saveState.you;
-
+      spawns.push(explorer);
       gameScene.addChild(explorer);
 
       // spawn allies
@@ -207,7 +293,8 @@ class Game extends React.Component {
       saveState.enemies.forEach((enemy, index) => {
         const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
         newSpawn.x = 428 + index * 40;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.y =
+          gameScene.height / 2 - explorer.height / 2 + index * 60 + 150;
         newSpawn.data = { ...enemy };
         newSpawn.vx = 0;
         newSpawn.vy = 1;
@@ -356,20 +443,6 @@ class Game extends React.Component {
         }
       };
 
-      app.stage.on("mousedown", function (e) {
-        var bullet = new PIXI.Sprite(carrotTex);
-
-        shoot(
-          explorer.rotation,
-          {
-            x: explorer.position.x + Math.cos(explorer.rotation) * 20,
-            y: explorer.position.y + Math.sin(explorer.rotation) * 20,
-          },
-          explorer,
-          bullet
-        );
-      });
-
       // var carrotTex = PIXI.Sprite(
       //   PIXI.Loader.shared.resources["spear.png"].texture
       // );
@@ -397,15 +470,18 @@ class Game extends React.Component {
 
     function play(delta) {
       //use the explorer's velocity to make it move
+      if (window.pause) {
+        return false;
+      }
       explorer.x += explorer.vx;
       explorer.y += explorer.vy;
 
-      explorer.rotation = rotateToPoint(
-        app.renderer.plugins.interaction.mouse.global.x,
-        app.renderer.plugins.interaction.mouse.global.y,
-        explorer.position.x,
-        explorer.position.y
-      );
+      // explorer.rotation = rotateToPoint(
+      //   app.renderer.plugins.interaction.mouse.global.x,
+      //   app.renderer.plugins.interaction.mouse.global.y,
+      //   explorer.position.x,
+      //   explorer.position.y
+      // );
 
       // make cunts shoot
       // function shoot(rotation, startPosition, spawn) {
@@ -418,10 +494,50 @@ class Game extends React.Component {
       //   app.stage.addChild(bullet);
       //   bullets.push(bullet);
       // }
-      spawns.forEach((spawn, spawnIndex) => {
-        var bullet = new PIXI.Sprite(carrotTex);
+      // console.log({ bullets });
 
-        shoot(1, spawn, spawn, bullet);
+      spawns.forEach((spawna, spawnIndex) => {
+        var bullet = new PIXI.Sprite(carrotTex);
+        let targets = [];
+        spawns.forEach((targetSpawn) => {
+          console.log(spawna.data.team, targetSpawn.data.team);
+          if (
+            spawna.data.uid !== targetSpawn.data.uid &&
+            spawna.data.team !== targetSpawn.data.team
+          ) {
+            var distance = Math.hypot(
+              spawna.x - targetSpawn.x,
+              spawna.y - targetSpawn.y
+            );
+            const clonedTarget = _.clone(targetSpawn);
+            clonedTarget.distance = distance;
+            targets.push(clonedTarget);
+          }
+        });
+        console.log("targets length", targets.length);
+
+        targets = _.sortBy(targets, "distance");
+        const closeTarget = targets[0];
+        const farTarget = targets[targets.length - 1];
+        // calculate angle between the spawn and the closest enemy
+        if (targets.length === 0) {
+          return false;
+        }
+        const calculatedAngle = angle(
+          spawna.x,
+          spawna.y,
+          closeTarget.x,
+          closeTarget.y
+        );
+        // const rotationRadians = degrees_to_radians(calculatedAngle);
+        const rotationRadians = Math.atan2(
+          closeTarget.y - spawna.y,
+          closeTarget.x - spawna.x
+        );
+        console.log("points", spawna.y, closeTarget.y, spawna.x, closeTarget.x);
+        console.log("angle", calculatedAngle);
+        console.log("radians", rotationRadians);
+        shoot(rotationRadians, spawna, spawna, bullet);
       });
 
       // loop through projectiles
@@ -440,26 +556,35 @@ class Game extends React.Component {
         spawns.forEach((spawn, spawnIndex) => {
           // hit collision
           // console.log(spawn.data);
-          if (spawn.data.status === "ally") {
+          // if (spawn.data.status === "ally") {
+          //   return false;
+          // }
+          // if bullet was shot by spawn, skip
+          if (bullet.spawn.data.uid === spawn.data.uid) {
             return false;
           }
           const didBulletHit = hitTestRectangle(bullet, spawn);
           if (didBulletHit) {
-            console.log("bullet", bullet.spawn);
+            // console.log("bullet", bullet.spawn);
             // delete the bullet somehow
-            bullet.parent.removeChild(bullet);
-            bullets.splice(b, 1);
-
+            if (bullet.parent) {
+              bullet.parent.removeChild(bullet);
+              bullets.splice(b, 1);
+            }
             // calculateDamage()
             // and health
-            console.log("health", spawn.data.health);
-            console.log("damage", bullet.spawn.data.weapon);
+            // console.log("health", spawn.data.health);
+            // console.log("damage", bullet.spawn.data.weapon);
             const weapon = weapons[bullet.spawn.data.weapon];
-            console.log("weapon  damage", weapon);
+            // console.log("weapon  damage", weapon);
+            console.log(spawn.data);
             spawn.data.health = spawn.data.health - weapon.damage;
-            console.log("health", spawn.data.health);
+            // console.log("health", spawn.data.health);
             if (spawn.data.health <= 0) {
               if (spawn.parent) {
+                if (spawn.data.status === "me") {
+                  alert("you died");
+                }
                 spawns.splice(spawnIndex, 1);
                 spawn.parent.removeChild(spawn);
               }
@@ -472,7 +597,7 @@ class Game extends React.Component {
           });
 
           if (enemies.length === 0) {
-            alert("round over");
+            // alert("round over");
           }
 
           // console.log({ spawns });
@@ -495,7 +620,9 @@ class Game extends React.Component {
 
       spawns.forEach((spawn) => {
         // attack in direction of closest (melee), or random (ranged)
-
+        if (spawn.data.status === "me") {
+          healthBar.outer.width = spawn.data.health;
+        }
         const spawnHitsWall = contain(spawn, {
           x: 28,
           y: 10,
@@ -521,48 +648,61 @@ class Game extends React.Component {
         function randomInteger(min, max) {
           return Math.floor(Math.random() * (max - min + 1)) + min;
         }
-        // if range / melee
-        // run away strat
-        if (randomInteger(0, 10) > 4) {
-          const randNum = randomInteger(1, 2);
-          switch (randNum) {
-            case 1:
-              spawn.vx *= -1;
-            case 2:
-              spawn.vy *= -1;
+        // dont run movement strat if player
+        if (spawn.data.status !== "me") {
+          // if range / melee
+          // run away strat
+          if (spawn.data.last_velocity_tick > 120) {
+            if (randomInteger(0, 10) > 0) {
+              const randNum = randomInteger(1, 2);
+              switch (randNum) {
+                case 1:
+                  spawn.vx *= -1;
+                case 2:
+                  spawn.vy *= -1;
+              }
+            } else {
+              const xDistance = Math.abs(spawn.x - closeTarget.x);
+              const yDistance = Math.abs(spawn.y - closeTarget.y);
+              // too close, circle, don't avoid unless scared
+              if (spawn.x < closeTarget.x) {
+                spawn.vx = 1;
+                spawn.vy = 1;
+              } else {
+                spawn.vx = -1;
+                spawn.vy = -1;
+              }
+              // if (xDistance < yDistance) {
+              //   if (spawn.x < closeTarget.x) {
+              //     spawn.vx = 1;
+              //     spawn.vy = 1;
+              //   } else {
+              //     spawn.vx = -1;
+              //     spawn.vy = -1;
+              //   }
+              // } else {
+              //   if (spawn.y < closeTarget.y) {
+              //     spawn.vx = 1;
+              //     spawn.vy = 1;
+              //   } else {
+              //     spawn.vx = -1;
+              //     spawn.vy = -1;
+              //   }
+              // }
+            }
+            spawn.data.last_velocity_tick = 0;
           }
-        } else {
-          const xDistance = Math.abs(spawn.x - closeTarget.x);
-          const yDistance = Math.abs(spawn.y - closeTarget.y);
-          // too close, circle, don't avoid unless scared
-          if (xDistance < yDistance) {
-            //   if (spawn.x < closeTarget.x) {
-            //     spawn.vx = 1;
-            //     spawn.vy = 1;
-            //   } else {
-            //     spawn.vx = -1;
-            //     spawn.vy = -1;
-            //   }
-            // } else {
-            //   if (spawn.y < closeTarget.y) {
-            //     spawn.vx = 1;
-            //     spawn.vy = 1;
-            //   } else {
-            //     spawn.vx = -1;
-            //     spawn.vy = -1;
-            //   }
+          spawn.data.last_velocity_tick++;
+          if (spawnHitsWall === "top" || spawnHitsWall === "bottom") {
+            // spawn.vy *= -1;
           }
+          if (spawnHitsWall === "left" || spawnHitsWall === "right") {
+            // spawn.vx *= -1;
+          }
+          spawn.x += spawn.vx;
+          spawn.y += spawn.vy;
         }
-        if (spawnHitsWall === "top" || spawnHitsWall === "bottom") {
-          // spawn.vy *= -1;
-        }
-        if (spawnHitsWall === "left" || spawnHitsWall === "right") {
-          // spawn.vx *= -1;
-        }
-        spawn.x += spawn.vx;
-        spawn.y += spawn.vy;
       });
-
       //Loop through all the sprites in the `enemies` array
       // blobs.forEach(function (blob) {
       //   //Move the blob
