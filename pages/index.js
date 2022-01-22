@@ -157,7 +157,7 @@ function spawnAll() {
 let carrotTex = null; // PIXI.Texture.fromImage("spear.png");
 
 class Game extends React.Component {
-  componentDidMount = () => {
+  start = () => {
     //Aliases
     const Application = PIXI.Application,
       Container = PIXI.Container,
@@ -881,7 +881,27 @@ class Game extends React.Component {
     }
   };
   render() {
-    return <h1>Hello, {this.props.name}</h1>;
+    return (
+      <div className="container">
+        <div className="title">Empty People</div>
+        <div className="summary">
+          Goodluck, walk into thy enemy. <br />
+          <br />
+          Life gets difficult without friends
+        </div>
+        <div className="formContainer"></div>
+        <div className="formLabel">Name:</div>
+        <input className="formInput" placeholder="..." />
+        <br />
+        <br />
+        <div className="formLabel">Bio:</div>
+        <textarea
+          className="formTextarea"
+          placeholder="One's self worth matters"
+        />
+        <button className="beginButton">BEGIN </button>
+      </div>
+    );
   }
 }
 
