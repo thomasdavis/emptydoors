@@ -13,7 +13,12 @@ TODO:
 - log everything
 - uid for the session
 -
-
+createjs.Sound.on("fileload", handleLoadComplete);
+createjs.Sound.alternateExtensions = ["mp3"];
+createjs.Sound.registerSound({src:"path/to/sound.ogg", id:"sound"});
+function handleLoadComplete(event) {
+	createjs.Sound.play("sound");
+}
 */
 
 const bioGeneratorPrompt = `
@@ -71,7 +76,7 @@ const weapons = {
 const saveState = {
   you: {
     movement_speed: 20,
-    health: 100,
+    health: 10000000,
     attack_speed: 20,
     weapon: "axe",
     name: "Thomas",
@@ -254,6 +259,7 @@ class Game extends React.Component {
       beginned: false,
       partying: false,
       runEngine: false,
+      hideEngine: false,
       possibleParty: {
         name: "Mel",
         weapon: "Axe",
@@ -278,6 +284,11 @@ class Game extends React.Component {
     // setTimeout(() => {
     //   this.setState({ beginned: true });
     // }, 500);
+    createjs.Sound.alternateExtensions = ["mp3"];
+    createjs.Sound.registerSound({ src: "spear.mp3", id: "spear" });
+    createjs.Sound.registerSound({ src: "axe.mp3", id: "axe" });
+    createjs.Sound.registerSound({ src: "fireball.mp3", id: "fireball" });
+    createjs.Sound.registerSound({ src: "arrow.mp3", id: "arrow" });
   };
   componentDidUpdate = (prevProps, prevState) => {
     // if beginning went from no to yes . make an if
@@ -304,6 +315,8 @@ class Game extends React.Component {
       Text = PIXI.Text,
       TextStyle = PIXI.TextStyle;
     function shoot(rotation, startPosition, spawn, sprite) {
+      // createjs.Sound.play("fireball");
+      createjs.Sound.play(spawn.data.weapon);
       spawn.data.last_attack_tick += 1;
       if (spawn.data.last_attack_tick > 60) {
         var bullet = new PIXI.Sprite(carrotTex);
@@ -571,7 +584,7 @@ class Game extends React.Component {
       //Update the current game state:
       state(delta);
     }
-
+    const that = this;
     function play(delta) {
       //use the explorer's velocity to make it move
       if (window.pause) {
@@ -579,24 +592,6 @@ class Game extends React.Component {
       }
       explorer.x += explorer.vx;
       explorer.y += explorer.vy;
-
-      // detect if player is near any spawn (hero)
-      // if they are, freeze the world and bring up dialog
-      // if gpt3 says yes, change team to `ally` else make them super hard to fucking kill
-      // fuck it, loop again
-      // those who status is ally don't count #TODO
-      // do uids matter
-      spawns.forEach((spawnZ) => {
-        console.log("id test", explorer.data.uid, spawnZ.data.uid);
-        if (explorer.data.uid !== spawnZ.data.uid) {
-          if (hitTestRectangle(explorer, spawnZ)) {
-            console.log("double id test", explorer.data.uid, spawnZ.data.uid);
-            console.log("whjy", explorer.x, spawnZ.x, explorer.y, spawnZ.y);
-            console.log("you git some other cunt");
-            // alert("you git some other cunt");
-          }
-        }
-      });
 
       spawns.forEach((spawna, spawnIndex) => {
         var bullet = new PIXI.Sprite(carrotTex);
@@ -632,6 +627,32 @@ class Game extends React.Component {
         // console.log("points", spawna.y, closeTarget.y, spawna.x, closeTarget.x);
         // console.log("radians", rotationRadians);
         shoot(rotationRadians, spawna, spawna, bullet);
+      });
+
+      // detect if player is near any spawn (hero)
+      // if they are, freeze the world and bring up dialog
+      // if gpt3 says yes, change team to `ally` else make them super hard to fucking kill
+      // fuck it, loop again
+      // those who status is ally don't count #TODO
+      // do uids matter
+      const that2 = this;
+      spawns.forEach((spawnZ) => {
+        console.log("id test", explorer.data.uid, spawnZ.data.uid);
+        if (explorer.data.uid !== spawnZ.data.uid) {
+          console.log("not my cousin");
+          if (hitTestRectangle(spawnZ, explorer)) {
+            console.log("double id test", explorer.data.uid, spawnZ.data.uid);
+            console.log("whjy", explorer.x, spawnZ.x, explorer.y, spawnZ.y);
+            console.log("you git some other cunt");
+            // alert("you git some other cunt");
+            // that.setState(
+            //   { partying: true, hideEngine: true, runEngine: false },
+            //   () => {
+            //     window.pause = true;
+            //   }
+            // );
+          }
+        }
       });
 
       // loop through projectiles
@@ -678,6 +699,7 @@ class Game extends React.Component {
               if (spawn.parent) {
                 if (spawn.data.status === "me") {
                   alert("you died");
+                  // #MUSIC - DEAD, I DIED
                 }
                 spawns.splice(spawnIndex, 1);
                 spawn.parent.removeChild(spawn);
@@ -921,13 +943,19 @@ class Game extends React.Component {
     }
   };
   render() {
-    const { beginned, partying, possibleParty, runEngine } = this.state;
+    const {
+      beginned,
+      partying,
+      possibleParty,
+      runEngine,
+      hideEngine,
+    } = this.state;
     const { name, bio, type, weapon } = possibleParty;
     // console.log({ beginned, partying });
 
     if (runEngine) {
       return (
-        <div>
+        <div style={{ display: hideEngine ? "hidden" : "block" }}>
           render game
           <div id="gameContainer" />
         </div>
@@ -936,56 +964,67 @@ class Game extends React.Component {
 
     if (partying) {
       return (
-        <div className="container ">
-          <div className="partyContainer">
-            <div className="charContainer">
-              <div className="charAvatar">
-                <img src="something.jpg" />
-              </div>
-              <div className="charTitle">
-                <span className="bioLabel">Name:</span> {name}
-              </div>
-              <div className="charRole">
-                <span className="bioLabel">Type:</span> {type}
-              </div>
-              <div className="charWeapon">
-                <span className="bioLabel">Weapon: </span>
-                {weapon}
-              </div>
-            </div>
-            <div className="discourseContainer">
-              <div className="bioContainer">
-                Kae is an elf who is very interested in nature and animals. She
-                loves to garden and take care of plants. She is also very
-                skilled with a bow and arrow,
-              </div>
-              <div className="responseContainer">
-                <div className="replyContainer">
-                  <div className="replyName">Mel:</div>
-                  <div className="replyContent">adasdada</div>
-                </div>{" "}
-                <div className="replyContainer">
-                  <div className="replyName">Mel:</div>
-                  <div className="replyContent">adasdada</div>
-                </div>{" "}
-                <div className="replyContainer">
-                  <div className="replyName">Mel:</div>
-                  <div className="replyContent">adasdada</div>
-                </div>{" "}
-                <div className="replyContainer">
-                  <div className="replyName">Mel:</div>
-                  <div className="replyContent">adasdada</div>
+        <>
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+          canvas {
+            display: none !important;
+          }
+          `,
+            }}
+          />
+          <div className="container ">
+            <div className="partyContainer">
+              <div className="charContainer">
+                <div className="charAvatar">
+                  <img src="something.jpg" />
                 </div>
-                <div className="replyInputContainer">
-                  <textarea className="replyTextarea" />
+                <div className="charTitle">
+                  <span className="bioLabel">Name:</span> {name}
                 </div>
-                <div className="talkButtonContainer">
-                  <button className="talkButton">SPEAK</button>
+                <div className="charRole">
+                  <span className="bioLabel">Type:</span> {type}
+                </div>
+                <div className="charWeapon">
+                  <span className="bioLabel">Weapon: </span>
+                  {weapon}
+                </div>
+              </div>
+              <div className="discourseContainer">
+                <div className="bioContainer">
+                  Kae is an elf who is very interested in nature and animals.
+                  She loves to garden and take care of plants. She is also very
+                  skilled with a bow and arrow,
+                </div>
+                <div className="responseContainer">
+                  <div className="replyContainer">
+                    <div className="replyName">Mel:</div>
+                    <div className="replyContent">adasdada</div>
+                  </div>{" "}
+                  <div className="replyContainer">
+                    <div className="replyName">Mel:</div>
+                    <div className="replyContent">adasdada</div>
+                  </div>{" "}
+                  <div className="replyContainer">
+                    <div className="replyName">Mel:</div>
+                    <div className="replyContent">adasdada</div>
+                  </div>{" "}
+                  <div className="replyContainer">
+                    <div className="replyName">Mel:</div>
+                    <div className="replyContent">adasdada</div>
+                  </div>
+                  <div className="replyInputContainer">
+                    <textarea className="replyTextarea" />
+                  </div>
+                  <div className="talkButtonContainer">
+                    <button className="talkButton">SPEAK</button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       );
     }
 

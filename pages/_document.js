@@ -17,6 +17,12 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Fauna+One&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
             rel="stylesheet"
           />
+          <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"
+            integrity="sha512-tWGC9KCH7gq1wgk/ZwaX1kd7bQq8M8ekETvWy0Mk8d9+d9XWHR4F3CuzbPJnUnu/eyEX/rPyYguXHtvN6WzcRQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+          ></script>
         </Head>
         <body>
           <Main />
