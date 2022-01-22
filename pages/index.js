@@ -1,6 +1,8 @@
 import React from "react";
 import _ from "lodash";
 import axios from "axios";
+
+const logs = {};
 //armour
 // how to generate sprites
 
@@ -250,7 +252,8 @@ class Game extends React.Component {
       username: "",
       bio: "",
       beginned: false,
-      partying: true,
+      partying: false,
+      runEngine: false,
       possibleParty: {
         name: "Mel",
         weapon: "Axe",
@@ -260,24 +263,36 @@ class Game extends React.Component {
   }
   begin = (e) => {
     e.preventDefault();
-    const name = "Ajax";
-    const bio = "I am a heaven";
+    // #TODOFIXTHIS
+    const username = "Ajax";
+    const bio = "I am a heavenly Orc who was blessed with piano skills";
     this.setState({
-      name,
+      username,
       bio,
       beginned: true,
+      runEngine: true,
     });
     return false;
   };
   componentDidMount = (e) => {
-    setTimeout(() => {
-      this.setState({ beginned: true });
-    }, 500);
+    // setTimeout(() => {
+    //   this.setState({ beginned: true });
+    // }, 500);
   };
-  componentDidUpdate = (prevProps, nextProps) => {
-    this.start();
+  componentDidUpdate = (prevProps, prevState) => {
+    // if beginning went from no to yes . make an if
+    console.log("probably matters", prevState, this.state);
+    if (prevState.beginned !== this.state.beginned) {
+      setTimeout(() => {
+        this.start();
+      }, 2000);
+    }
+    // if (nextProps.runEngine) {
+    //   this.start();
+    // }
   };
   start = () => {
+    console.log("started ------------------------- 1");
     //Aliases
     const Application = PIXI.Application,
       Container = PIXI.Container,
@@ -331,8 +346,10 @@ class Game extends React.Component {
     app.stage.interactive = true;
     app.stage.interactiveChildren = true;
     //Add the canvas that Pixi automatically created for you to the HTML document
+    const gameContainer = document.getElementById("gameContainer");
+    console.log("does this nigger exist", gameContainer);
+    // gameContainer.appendChild(app.view);
     document.body.appendChild(app.view);
-
     loader
       .add("spear.png")
       .add("fireball.png")
@@ -374,7 +391,7 @@ class Game extends React.Component {
       enemies,
       id;
     var bullets = [];
-    var bulletSpeed = 5;
+    var bulletSpeed = 2;
     let spawns = [];
 
     function setup() {
@@ -436,51 +453,6 @@ class Game extends React.Component {
         // attach combat
       });
 
-      //Treasure
-
-      //Make the blobs
-      // let numberOfBlobs = 6,
-      //   spacing = 48,
-      //   xOffset = 150,
-      //   speed = 2,
-      //   direction = 1;
-      //
-      // //An array to store all the blob monsters
-      // blobs = [];
-      //
-      // //Make as many blobs as there are `numberOfBlobs`
-      // for (let i = 0; i < numberOfBlobs; i++) {
-      //   //Make a blob
-      //   const blob = new Sprite(id["blob.png"]);
-      //
-      //   //Space each blob horizontally according to the `spacing` value.
-      //   //`xOffset` determines the point from the left of the screen
-      //   //at which the first blob should be added
-      //   const x = spacing * i + xOffset;
-      //
-      //   //Give the blob a random y position
-      //   const y = randomInt(0, app.stage.height - blob.height);
-      //
-      //   //Set the blob's position
-      //   blob.x = x;
-      //   blob.y = y;
-      //
-      //   //Set the blob's vertical velocity. `direction` will be either `1` or
-      //   //`-1`. `1` means the enemy will move down and `-1` means the blob will
-      //   //move up. Multiplying `direction` by `speed` determines the blob's
-      //   //vertical direction
-      //   blob.vy = speed * direction;
-      //
-      //   //Reverse the direction for the next blob
-      //   direction *= -1;
-      //
-      //   //Push the blob into the `blobs` array
-      //   blobs.push(blob);
-      //
-      //   //Add the blob to the `gameScene`
-      //   gameScene.addChild(blob);
-      // }
-
       //Create the health bar
       healthBar = new Container();
       healthBar.position.set(app.stage.width - 170, 4);
@@ -528,7 +500,7 @@ class Game extends React.Component {
       //Left arrow key `press` method
       left.press = function () {
         //Change the explorer's velocity when the key is pressed
-        explorer.vx = -5;
+        explorer.vx = -2;
         explorer.vy = 0;
       };
 
@@ -544,7 +516,7 @@ class Game extends React.Component {
 
       //Up
       up.press = function () {
-        explorer.vy = -5;
+        explorer.vy = -2;
         explorer.vx = 0;
       };
       up.release = function () {
@@ -555,7 +527,7 @@ class Game extends React.Component {
 
       //Right
       right.press = function () {
-        explorer.vx = 5;
+        explorer.vx = 2;
         explorer.vy = 0;
       };
       right.release = function () {
@@ -566,7 +538,7 @@ class Game extends React.Component {
 
       //Down
       down.press = function () {
-        explorer.vy = 5;
+        explorer.vy = 2;
         explorer.vx = 0;
       };
       down.release = function () {
@@ -608,31 +580,28 @@ class Game extends React.Component {
       explorer.x += explorer.vx;
       explorer.y += explorer.vy;
 
-      // explorer.rotation = rotateToPoint(
-      //   app.renderer.plugins.interaction.mouse.global.x,
-      //   app.renderer.plugins.interaction.mouse.global.y,
-      //   explorer.position.x,
-      //   explorer.position.y
-      // );
-
-      // make cunts shoot
-      // function shoot(rotation, startPosition, spawn) {
-      //   var bullet = new PIXI.Sprite(carrotTex);
-      //   bullet.position.x = startPosition.x;
-      //   bullet.position.y = startPosition.y;
-      //   console.log({ rotation });
-      //   bullet.rotation = rotation;
-      //   bullet.spawn = spawn; // attach the owner of the attack
-      //   app.stage.addChild(bullet);
-      //   bullets.push(bullet);
-      // }
-      // console.log({ bullets });
+      // detect if player is near any spawn (hero)
+      // if they are, freeze the world and bring up dialog
+      // if gpt3 says yes, change team to `ally` else make them super hard to fucking kill
+      // fuck it, loop again
+      // those who status is ally don't count #TODO
+      // do uids matter
+      spawns.forEach((spawnZ) => {
+        console.log("id test", explorer.data.uid, spawnZ.data.uid);
+        if (explorer.data.uid !== spawnZ.data.uid) {
+          if (hitTestRectangle(explorer, spawnZ)) {
+            console.log("double id test", explorer.data.uid, spawnZ.data.uid);
+            console.log("whjy", explorer.x, spawnZ.x, explorer.y, spawnZ.y);
+            console.log("you git some other cunt");
+            // alert("you git some other cunt");
+          }
+        }
+      });
 
       spawns.forEach((spawna, spawnIndex) => {
         var bullet = new PIXI.Sprite(carrotTex);
         let targets = [];
         spawns.forEach((targetSpawn) => {
-          console.log(spawna.data.team, targetSpawn.data.team);
           if (
             spawna.data.uid !== targetSpawn.data.uid &&
             spawna.data.team !== targetSpawn.data.team
@@ -646,7 +615,6 @@ class Game extends React.Component {
             targets.push(clonedTarget);
           }
         });
-        console.log("targets length", targets.length);
 
         targets = _.sortBy(targets, "distance");
         const closeTarget = targets[0];
@@ -661,8 +629,8 @@ class Game extends React.Component {
           closeTarget.y - spawna.y,
           closeTarget.x - spawna.x
         );
-        console.log("points", spawna.y, closeTarget.y, spawna.x, closeTarget.x);
-        console.log("radians", rotationRadians);
+        // console.log("points", spawna.y, closeTarget.y, spawna.x, closeTarget.x);
+        // console.log("radians", rotationRadians);
         shoot(rotationRadians, spawna, spawna, bullet);
       });
 
@@ -703,7 +671,7 @@ class Game extends React.Component {
             // console.log("damage", bullet.spawn.data.weapon);
             const weapon = weapons[bullet.spawn.data.weapon];
             // console.log("weapon  damage", weapon);
-            console.log(spawn.data);
+            // console.log(spawn.data);
             spawn.data.health = spawn.data.health - weapon.damage;
             // console.log("health", spawn.data.health);
             if (spawn.data.health <= 0) {
@@ -798,23 +766,6 @@ class Game extends React.Component {
                 spawn.vx = -1;
                 spawn.vy = -1;
               }
-              // if (xDistance < yDistance) {
-              //   if (spawn.x < closeTarget.x) {
-              //     spawn.vx = 1;
-              //     spawn.vy = 1;
-              //   } else {
-              //     spawn.vx = -1;
-              //     spawn.vy = -1;
-              //   }
-              // } else {
-              //   if (spawn.y < closeTarget.y) {
-              //     spawn.vx = 1;
-              //     spawn.vy = 1;
-              //   } else {
-              //     spawn.vx = -1;
-              //     spawn.vy = -1;
-              //   }
-              // }
             }
             spawn.data.last_velocity_tick = 0;
           }
@@ -829,43 +780,6 @@ class Game extends React.Component {
           spawn.y += spawn.vy;
         }
       });
-      //Loop through all the sprites in the `enemies` array
-      // blobs.forEach(function (blob) {
-      //   //Move the blob
-      //   blob.y += blob.vy;
-      //
-      //   //Check the blob's screen boundaries
-      //   const blobHitsWall = contain(blob, {
-      //     x: 28,
-      //     y: 10,
-      //     width: 488,
-      //     height: 480,
-      //   });
-      //
-      //   //If the blob hits the top or bottom of the stage, reverse
-      //   //its direction
-      //   if (blobHitsWall === "top" || blobHitsWall === "bottom") {
-      //     blob.vy *= -1;
-      //   }
-      //
-      //   //Test for a collision. If any of the enemies are touching
-      //   //the explorer, set `explorerHit` to `true`
-      //   if (hitTestRectangle(explorer, blob)) {
-      //     explorerHit = true;
-      //   }
-      // });
-
-      //If the explorer is hit...
-      if (explorerHit) {
-        //Make the explorer semi-transparent
-        explorer.alpha = 0.5;
-
-        //Reduce the width of the health bar's inner rectangle by 1 pixel
-        healthBar.outer.width -= 1;
-      } else {
-        //Make the explorer fully opaque (non-transparent) if it hasn't been hit
-        explorer.alpha = 1;
-      }
 
       //Does the explorer have enough health? If the width of the `innerBar`
       //is less than zero, end the game and display "You lost!"
@@ -1007,9 +921,19 @@ class Game extends React.Component {
     }
   };
   render() {
-    const { beginned, partying, possibleParty } = this.state;
+    const { beginned, partying, possibleParty, runEngine } = this.state;
     const { name, bio, type, weapon } = possibleParty;
-    return <div />;
+    // console.log({ beginned, partying });
+
+    if (runEngine) {
+      return (
+        <div>
+          render game
+          <div id="gameContainer" />
+        </div>
+      );
+    }
+
     if (partying) {
       return (
         <div className="container ">
@@ -1065,11 +989,8 @@ class Game extends React.Component {
       );
     }
 
-    if (beginned) {
-      return <div className="container">no mans</div>;
-    }
-
     if (!beginned) {
+      // #MUSIC
       return (
         <div className="container">
           <div className="title">Empty People</div>
@@ -1105,6 +1026,7 @@ class Game extends React.Component {
         </div>
       );
     }
+    return <div>Who gives a shit</div>;
   }
 }
 
