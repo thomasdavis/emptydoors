@@ -117,7 +117,13 @@ class Game extends React.Component {
     //Add the canvas that Pixi automatically created for you to the HTML document
     document.body.appendChild(app.view);
 
-    loader.add("treasureHunter.json").load(setup);
+    loader
+      .add("spear.png")
+      .add("carrot.png")
+      .add("door.png")
+      .add("treasure.png")
+      .add("explorer.png")
+      .load(setup);
 
     //Define variables that might be used in more
     //than one function
@@ -147,56 +153,57 @@ class Game extends React.Component {
 
       //Make the sprites and add them to the `gameScene`
       //Create an alias for the texture atlas frame ids
-      id = resources["treasureHunter.json"].textures;
 
       //Dungeon
-      dungeon = new Sprite(id["dungeon.png"]);
-      gameScene.addChild(dungeon);
+
+      let dungeonSprite = new Sprite(PIXI.Texture.fromImage("dungeon.png"));
+      gameScene.addChild(dungeonSprite);
 
       //Door
-      door = new Sprite(id["door.png"]);
-      door.position.set(32, 0);
-      gameScene.addChild(door);
+      // let doorSprite = new Sprite(PIXI.Texture.fromImage("door.png"));
+      // door = new Sprite(doorSprite);
+      // door.position.set(32, 0);
+      // gameScene.addChild(door);
 
       //Explorer
-      explorer = new Sprite(id["explorer.png"]);
+      explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+      // explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+
       explorer.x = 68;
       explorer.y = gameScene.height / 2 - explorer.height / 2;
       explorer.vx = 0;
       explorer.vy = 0;
+      explorer.data = saveState.you;
+
       gameScene.addChild(explorer);
 
       // spawn allies
-      saveState.allies.forEach((ally, index) => {
-        const newSpawn = new Sprite(id["explorer.png"]);
-        newSpawn.x = 68 + index * 40;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-        newSpawn.data = { ...ally };
-        newSpawn.vx = 0;
-        newSpawn.vy = 1;
-        gameScene.addChild(newSpawn);
-        spawns.push(newSpawn);
-      });
-
-      // spawn enemies
-      saveState.enemies.forEach((enemy, index) => {
-        const newSpawn = new Sprite(id["explorer.png"]);
-        newSpawn.x = 428 + index * 40;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-        newSpawn.data = { ...enemy };
-        newSpawn.vx = 0;
-        newSpawn.vy = 1;
-        newSpawn.alpha = 0.5;
-        gameScene.addChild(newSpawn);
-        spawns.push(newSpawn);
-        // attach combat
-      });
+      // saveState.allies.forEach((ally, index) => {
+      //   const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+      //   newSpawn.x = 68 + index * 40;
+      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+      //   newSpawn.data = { ...ally };
+      //   newSpawn.vx = 0;
+      //   newSpawn.vy = 1;
+      //   gameScene.addChild(newSpawn);
+      //   spawns.push(newSpawn);
+      // });
+      //
+      // // spawn enemies
+      // saveState.enemies.forEach((enemy, index) => {
+      //   const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+      //   newSpawn.x = 428 + index * 40;
+      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+      //   newSpawn.data = { ...enemy };
+      //   newSpawn.vx = 0;
+      //   newSpawn.vy = 1;
+      //   newSpawn.alpha = 0.5;
+      //   gameScene.addChild(newSpawn);
+      //   spawns.push(newSpawn);
+      //   // attach combat
+      // });
 
       //Treasure
-      treasure = new Sprite(id["treasure.png"]);
-      treasure.x = gameScene.width - treasure.width - 48;
-      treasure.y = gameScene.height / 2 - treasure.height / 2;
-      gameScene.addChild(treasure);
 
       //Make the blobs
       // let numberOfBlobs = 6,
@@ -336,7 +343,6 @@ class Game extends React.Component {
       };
 
       app.stage.on("mousedown", function (e) {
-        console.log("mousedown");
         shoot(
           explorer.rotation,
           {
@@ -347,7 +353,11 @@ class Game extends React.Component {
         );
       });
 
-      var carrotTex = PIXI.Texture.fromImage("carrot.png");
+      // var carrotTex = PIXI.Sprite(
+      //   PIXI.Loader.shared.resources["spear.png"].texture
+      // );
+      var carrotTex = PIXI.Texture.fromImage("spear.png");
+
       function shoot(rotation, startPosition, spawn) {
         var bullet = new PIXI.Sprite(carrotTex);
         bullet.position.x = startPosition.x;
@@ -406,15 +416,21 @@ class Game extends React.Component {
         //  then loop through potential targets
         spawns.forEach((spawn) => {
           // hit collision
-          console.log(spawn.data);
+          // console.log(spawn.data);
           if (spawn.data.status === "ally") {
             return false;
           }
           const didBulletHit = hitTestRectangle(bullet, spawn);
           if (didBulletHit) {
+            console.log("bullet", bullet.spawn);
             // delete the bullet somehow
             bullet.parent.removeChild(bullet);
             bullets.splice(b, 1);
+
+            // calculateDamage()
+            // and health
+            // spawn.data.health =
+            //   spawn.data.health - weapons[bullet.spawn.weapon].damage;
           }
           // cant shoot allies
 
@@ -603,6 +619,7 @@ class Game extends React.Component {
 
     //The `hitTestRectangle` function
     function hitTestRectangle(r1, r2) {
+      return false;
       //Define the variables we'll need to calculate
       let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
 
