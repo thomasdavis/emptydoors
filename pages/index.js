@@ -178,30 +178,30 @@ class Game extends React.Component {
       gameScene.addChild(explorer);
 
       // spawn allies
-      // saveState.allies.forEach((ally, index) => {
-      //   const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
-      //   newSpawn.x = 68 + index * 40;
-      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-      //   newSpawn.data = { ...ally };
-      //   newSpawn.vx = 0;
-      //   newSpawn.vy = 1;
-      //   gameScene.addChild(newSpawn);
-      //   spawns.push(newSpawn);
-      // });
-      //
-      // // spawn enemies
-      // saveState.enemies.forEach((enemy, index) => {
-      //   const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
-      //   newSpawn.x = 428 + index * 40;
-      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-      //   newSpawn.data = { ...enemy };
-      //   newSpawn.vx = 0;
-      //   newSpawn.vy = 1;
-      //   newSpawn.alpha = 0.5;
-      //   gameScene.addChild(newSpawn);
-      //   spawns.push(newSpawn);
-      //   // attach combat
-      // });
+      saveState.allies.forEach((ally, index) => {
+        const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+        newSpawn.x = 68 + index * 40;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.data = { ...ally };
+        newSpawn.vx = 0;
+        newSpawn.vy = 1;
+        gameScene.addChild(newSpawn);
+        spawns.push(newSpawn);
+      });
+
+      // spawn enemies
+      saveState.enemies.forEach((enemy, index) => {
+        const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+        newSpawn.x = 428 + index * 40;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.data = { ...enemy };
+        newSpawn.vx = 0;
+        newSpawn.vy = 1;
+        newSpawn.alpha = 0.5;
+        gameScene.addChild(newSpawn);
+        spawns.push(newSpawn);
+        // attach combat
+      });
 
       //Treasure
 
@@ -362,6 +362,7 @@ class Game extends React.Component {
         var bullet = new PIXI.Sprite(carrotTex);
         bullet.position.x = startPosition.x;
         bullet.position.y = startPosition.y;
+        console.log({ rotation });
         bullet.rotation = rotation;
         bullet.spawn = spawn; // attach the owner of the attack
         app.stage.addChild(bullet);
@@ -429,8 +430,15 @@ class Game extends React.Component {
 
             // calculateDamage()
             // and health
-            // spawn.data.health =
-            //   spawn.data.health - weapons[bullet.spawn.weapon].damage;
+            console.log("health", spawn.data.health);
+            console.log("damage", bullet.spawn.data.weapon);
+            const weapon = weapons[bullet.spawn.data.weapon];
+            console.log("weapon  damage", weapon);
+            spawn.data.health = spawn.data.health - weapon.damage;
+            console.log("health", spawn.data.health);
+            if (spawn.data.health <= 0) {
+              spawn.parent.removeChild(spawn);
+            }
           }
           // cant shoot allies
 
@@ -557,13 +565,6 @@ class Game extends React.Component {
         explorer.alpha = 1;
       }
 
-      //Check for a collision between the explorer and the treasure
-      if (hitTestRectangle(explorer, treasure)) {
-        //If the treasure is touching the explorer, center it over the explorer
-        treasure.x = explorer.x + 8;
-        treasure.y = explorer.y + 8;
-      }
-
       //Does the explorer have enough health? If the width of the `innerBar`
       //is less than zero, end the game and display "You lost!"
       if (healthBar.outer.width < 0) {
@@ -573,10 +574,6 @@ class Game extends React.Component {
 
       //If the explorer has brought the treasure to the exit,
       //end the game and display "You won!"
-      if (hitTestRectangle(treasure, door)) {
-        state = end;
-        message.text = "You won!";
-      }
     }
 
     function end() {
@@ -619,7 +616,6 @@ class Game extends React.Component {
 
     //The `hitTestRectangle` function
     function hitTestRectangle(r1, r2) {
-      return false;
       //Define the variables we'll need to calculate
       let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
 
