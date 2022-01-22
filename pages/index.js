@@ -1,5 +1,5 @@
 import React from "react";
-
+import _ from "lodash";
 //armour
 // how to generate sprites
 const races = {
@@ -13,6 +13,13 @@ const races = {
     health_modifier: 0.1,
   },
 };
+/*
+axe
+sword
+spear
+arrows
+magic
+*/
 const weapons = {
   spear: {
     damage: 10,
@@ -30,6 +37,7 @@ const saveState = {
     weapon: "spear",
     name: "Thomas",
     race: "orc",
+    status: "me",
   },
   allies: [
     {
@@ -39,6 +47,16 @@ const saveState = {
       weapon: "spear",
       name: "James",
       race: "orc",
+      status: "ally",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "spear",
+      name: "James",
+      race: "orc",
+      status: "ally",
     },
   ],
   enemies: [
@@ -49,6 +67,16 @@ const saveState = {
       weapon: "spear",
       name: "Demon",
       race: "orc",
+      status: "enemy",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "spear",
+      name: "Demon",
+      race: "orc",
+      status: "enemy",
     },
   ],
 };
@@ -110,6 +138,8 @@ class Game extends React.Component {
       id;
     var bullets = [];
     var bulletSpeed = 5;
+    let spawns = [];
+
     function setup() {
       //Make the game scene and add it to the stage
       gameScene = new Container();
@@ -136,26 +166,30 @@ class Game extends React.Component {
       explorer.vy = 0;
       gameScene.addChild(explorer);
 
-      const spawns = [];
-
       // spawn allies
-      saveState.allies.forEach((ally) => {
+      saveState.allies.forEach((ally, index) => {
         const newSpawn = new Sprite(id["explorer.png"]);
-        newSpawn.x = 68;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2;
+        newSpawn.x = 68 + index * 40;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.data = { ...ally };
         newSpawn.vx = 0;
-        newSpawn.vy = 0;
+        newSpawn.vy = 1;
         gameScene.addChild(newSpawn);
+        spawns.push(newSpawn);
       });
 
       // spawn enemies
-      saveState.enemies.forEach((ally) => {
+      saveState.enemies.forEach((enemy, index) => {
         const newSpawn = new Sprite(id["explorer.png"]);
-        newSpawn.x = 468;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2;
+        newSpawn.x = 428 + index * 40;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.data = { ...enemy };
         newSpawn.vx = 0;
-        newSpawn.vy = 0;
+        newSpawn.vy = 1;
+        newSpawn.alpha = 0.5;
         gameScene.addChild(newSpawn);
+        spawns.push(newSpawn);
+        // attach combat
       });
 
       //Treasure
@@ -225,7 +259,6 @@ class Game extends React.Component {
       outerBar.drawRect(0, 0, 128, 8);
       outerBar.endFill();
       healthBar.addChild(outerBar);
-
       healthBar.outer = outerBar;
 
       //Create the `gameOver` scene
@@ -301,30 +334,27 @@ class Game extends React.Component {
           explorer.vy = 0;
         }
       };
-      app.stage.pointerdown = mousedownEventHandler;
 
-      function mousedownEventHandler(e) {
-        //get the data
-        console.log("Mouse Down: button is:");
-      }
-      console.log("huh");
       app.stage.on("mousedown", function (e) {
         console.log("mousedown");
-        shoot(explorer.rotation, {
-          x: explorer.position.x + Math.cos(explorer.rotation) * 20,
-          y: explorer.position.y + Math.sin(explorer.rotation) * 20,
-        });
+        shoot(
+          explorer.rotation,
+          {
+            x: explorer.position.x + Math.cos(explorer.rotation) * 20,
+            y: explorer.position.y + Math.sin(explorer.rotation) * 20,
+          },
+          explorer
+        );
       });
 
       var carrotTex = PIXI.Texture.fromImage("carrot.png");
-      function shoot(rotation, startPosition) {
+      function shoot(rotation, startPosition, spawn) {
         var bullet = new PIXI.Sprite(carrotTex);
-        console.log("hello");
         bullet.position.x = startPosition.x;
         bullet.position.y = startPosition.y;
         bullet.rotation = rotation;
+        bullet.spawn = spawn; // attach the owner of the attack
         app.stage.addChild(bullet);
-        console.log(bullet);
         bullets.push(bullet);
       }
 
@@ -361,9 +391,39 @@ class Game extends React.Component {
         explorer.position.y
       );
 
+      // loop through projectiles
       for (var b = bullets.length - 1; b >= 0; b--) {
+        const bullet = bullets[b];
         bullets[b].position.x += Math.cos(bullets[b].rotation) * bulletSpeed;
         bullets[b].position.y += Math.sin(bullets[b].rotation) * bulletSpeed;
+        bullet.x = bullet.position.x;
+        bullet.y = bullet.position.y;
+        // is bullet out of bounds, splice the cunt out
+
+        if (bullet.x > 512 || bullet.x < 0 || bullet.y > 512 || bullet.y < 0) {
+          bullets.splice(b, 1);
+        }
+        //  then loop through potential targets
+        spawns.forEach((spawn) => {
+          // hit collision
+          console.log(spawn.data);
+          if (spawn.data.status === "ally") {
+            return false;
+          }
+          const didBulletHit = hitTestRectangle(bullet, spawn);
+          if (didBulletHit) {
+            // delete the bullet somehow
+            bullet.parent.removeChild(bullet);
+            bullets.splice(b, 1);
+          }
+          // cant shoot allies
+
+          // console.log({ spawn, bullet, didBulletHit });
+          // delete bullet
+          // subtract current health
+          // calculateDamage()
+          // for the lolz, make a gpt3 dying message
+        });
       }
 
       //Contain the explorer inside the area of the dungeon
@@ -372,6 +432,76 @@ class Game extends React.Component {
 
       //Set `explorerHit` to `false` before checking for a collision
       let explorerHit = false;
+
+      spawns.forEach((spawn) => {
+        // attack in direction of closest (melee), or random (ranged)
+
+        const spawnHitsWall = contain(spawn, {
+          x: 28,
+          y: 10,
+          width: 488,
+          height: 480,
+        });
+
+        // sort opposite targets by distance
+        let targets = [];
+        spawns.forEach((targetSpawn) => {
+          var distance = Math.hypot(
+            spawn.x - targetSpawn.x,
+            spawn.y - targetSpawn.y
+          );
+          const clonedTarget = _.clone(targetSpawn);
+          clonedTarget.distance = distance;
+          targets.push(clonedTarget);
+        });
+
+        targets = _.sortBy(targets, "distance");
+        const closeTarget = targets[0];
+        const farTarget = targets[targets.length - 1];
+        function randomInteger(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        // if range / melee
+        // run away strat
+        if (randomInteger(0, 10) > 4) {
+          const randNum = randomInteger(1, 2);
+          switch (randNum) {
+            case 1:
+              spawn.vx *= -1;
+            case 2:
+              spawn.vy *= -1;
+          }
+        } else {
+          const xDistance = Math.abs(spawn.x - closeTarget.x);
+          const yDistance = Math.abs(spawn.y - closeTarget.y);
+          // too close, circle, don't avoid unless scared
+          if (xDistance < yDistance) {
+            //   if (spawn.x < closeTarget.x) {
+            //     spawn.vx = 1;
+            //     spawn.vy = 1;
+            //   } else {
+            //     spawn.vx = -1;
+            //     spawn.vy = -1;
+            //   }
+            // } else {
+            //   if (spawn.y < closeTarget.y) {
+            //     spawn.vx = 1;
+            //     spawn.vy = 1;
+            //   } else {
+            //     spawn.vx = -1;
+            //     spawn.vy = -1;
+            //   }
+          }
+        }
+        if (spawnHitsWall === "top" || spawnHitsWall === "bottom") {
+          // spawn.vy *= -1;
+        }
+        if (spawnHitsWall === "left" || spawnHitsWall === "right") {
+          // spawn.vx *= -1;
+        }
+        spawn.x += spawn.vx;
+        spawn.y += spawn.vy;
+      });
 
       //Loop through all the sprites in the `enemies` array
       // blobs.forEach(function (blob) {
@@ -513,7 +643,7 @@ class Game extends React.Component {
         //There's no collision on the x axis
         hit = false;
       }
-
+      // console.log(vx, vy, combinedHalfWidths, hit);
       //`hit` will be either `true` or `false`
       return hit;
     }
