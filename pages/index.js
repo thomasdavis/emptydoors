@@ -1,24 +1,20 @@
 import React from "react";
 import _ from "lodash";
 import axios from "axios";
-
+import { creation, diaglogue } from "./dialogue";
+// const { prompt } = dialogue;
+// const { prompt } = creation;
 const logs = {};
-//armour
-// how to generate sprites
+
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 /*
 TODO:
-- generate uids for entities
 - win / lose states
 - log everything
 - uid for the session
--
-createjs.Sound.on("fileload", handleLoadComplete);
-createjs.Sound.alternateExtensions = ["mp3"];
-createjs.Sound.registerSound({src:"path/to/sound.ogg", id:"sound"});
-function handleLoadComplete(event) {
-	createjs.Sound.play("sound");
-}
 */
 
 const bioGeneratorPrompt = `
@@ -69,6 +65,8 @@ const weapons = {
     attack_time: 20,
   },
 };
+const RACES2 = ["orc", "fairy", "human", "elf"];
+const TYPES2 = ["magic", "warrior", "archer"]; // such bad variable name, don't give a shit
 
 const saveState = {
   you: {
@@ -77,174 +75,18 @@ const saveState = {
     attack_speed: 20,
     weapon: "axe",
     name: "Thomas",
-    race: "orc",
-    type: "warrior",
+    race: RACES2[randomInteger(0, 3)],
+    type: TYPES2[randomInteger(0, 2)],
     status: "me",
     team: "ally",
     uid: "asd",
     last_attack_tick: 0,
     last_velocity_tick: 0,
   },
-  allies: [
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "magic",
-      name: "Jemel",
-      race: "orc",
-      type: "mage",
-      status: "ally",
-      uid: "asdd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "ally",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "arrow",
-      name: "James",
-      type: "archer",
-      race: "orc",
-      status: "ally",
-      uid: "asd1212",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "ally",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "magic",
-      name: "Jemel",
-      race: "elf",
-      type: "mage",
-      status: "ally",
-      uid: "asdd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "ally",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "arrow",
-      name: "James",
-      type: "archer",
-      race: "elf",
-      status: "ally",
-      uid: "asd1212",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "ally",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "axe",
-      name: "James",
-      type: "warrior",
-      race: "elf",
-      status: "ally",
-      uid: "asd1212",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "ally",
-    },
-  ],
-  enemies: [
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "magic",
-      name: "Roland",
-      race: "human",
-      type: "mage",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "magic",
-      name: "Roland",
-      race: "human",
-      type: "mage",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "arrow",
-      name: "Roland",
-      race: "human",
-      type: "archer",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "axe",
-      name: "Roland",
-      race: "fairy",
-      type: "warrior",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "axe",
-      name: "Roland",
-      race: "fairy",
-      type: "archer",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-    {
-      movement_speed: 20,
-      health: 100,
-      attack_speed: 20,
-      weapon: "axe",
-      name: "Roland",
-      race: "fairy",
-      type: "mage",
-      status: "enemy",
-      uid: "asxxxxd",
-      last_attack_tick: 0,
-      last_velocity_tick: 0,
-      team: "enemy",
-    },
-  ],
+  allies: [],
+  enemies: [],
 };
-
+const levels = [];
 let carrotTex = null; // PIXI.Texture.fromImage("spear.png");
 
 class Game extends React.Component {
@@ -368,7 +210,7 @@ class Game extends React.Component {
     app.stage.interactiveChildren = true;
     //Add the canvas that Pixi automatically created for you to the HTML document
     const gameContainer = document.getElementById("gameContainer");
-    console.log("does this nigger exist", gameContainer);
+    console.log("does this thing exist", gameContainer);
     // gameContainer.appendChild(app.view);
     document.body.appendChild(app.view);
     loader
@@ -397,7 +239,6 @@ class Game extends React.Component {
     //Define variables that might be used in more
     //than one function
     let state,
-      explorer,
       treasure,
       blobs,
       chimes,
@@ -414,7 +255,7 @@ class Game extends React.Component {
     var bullets = [];
     var bulletSpeed = 2;
     let spawns = [];
-
+    let explorer = {};
     function setup() {
       //Make the game scene and add it to the stage
       gameScene = new Container();
@@ -435,14 +276,17 @@ class Game extends React.Component {
       // gameScene.addChild(door);
 
       //Explorer
-      explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+      explorer.data = saveState.you;
+      const explorerAssetName = `${explorer.data.race}_${explorer.data.type}.png`;
+
+      explorer = new Sprite(PIXI.Texture.fromImage(explorerAssetName));
       // explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
 
       explorer.x = 68;
       explorer.y = gameScene.height / 2 - explorer.height / 2;
       explorer.vx = 0;
       explorer.vy = 0;
-      explorer.data = saveState.you;
+
       spawns.push(explorer);
       gameScene.addChild(explorer);
 
@@ -605,6 +449,10 @@ class Game extends React.Component {
         var bullet = new PIXI.Sprite(carrotTex);
         let targets = [];
         spawns.forEach((targetSpawn) => {
+          if (!spawna.data) {
+            console.log("aasa", spawna);
+            return false; // #TODO - no idea
+          }
           if (
             spawna.data.uid !== targetSpawn.data.uid &&
             spawna.data.team !== targetSpawn.data.team
@@ -645,6 +493,9 @@ class Game extends React.Component {
       // do uids matter
       const that2 = this;
       spawns.forEach((spawnZ) => {
+        if (!spawnZ.data) {
+          return false; // #TODO - no idea again
+        }
         console.log("id test", explorer.data.uid, spawnZ.data.uid);
         if (explorer.data.uid !== spawnZ.data.uid) {
           console.log("not my cousin");
@@ -653,12 +504,14 @@ class Game extends React.Component {
             console.log("whjy", explorer.x, spawnZ.x, explorer.y, spawnZ.y);
             console.log("you git some other cunt");
             // alert("you git some other cunt");
-            // that.setState(
-            //   { partying: true, hideEngine: true, runEngine: false },
-            //   () => {
-            //     window.pause = true;
-            //   }
-            // );
+            // #TODO - not rendering the canvas always
+
+            that.setState(
+              { partying: true, hideEngine: true, runEngine: false },
+              () => {
+                window.pause = true;
+              }
+            );
           }
         }
       });
@@ -744,6 +597,10 @@ class Game extends React.Component {
 
       spawns.forEach((spawn) => {
         // attack in direction of closest (melee), or random (ranged)
+
+        if (!spawn.data) {
+          return false; // #TODO - no idea again
+        }
         if (spawn.data.status === "me") {
           healthBar.outer.width = spawn.data.health;
         }
@@ -769,9 +626,7 @@ class Game extends React.Component {
         targets = _.sortBy(targets, "distance");
         const closeTarget = targets[0];
         const farTarget = targets[targets.length - 1];
-        function randomInteger(min, max) {
-          return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+
         // dont run movement strat if player
         if (spawn.data.status !== "me") {
           // if range / melee
@@ -960,6 +815,17 @@ class Game extends React.Component {
     } = this.state;
     const { name, bio, type, weapon } = possibleParty;
     // console.log({ beginned, partying });
+
+    // staff benda billi - polio
+    // .<3.........<3........
+    // zzzzzzzzzziiiiiiiiiiiiiiiiiiiiiiiiiiii
+
+    let appElements = [];
+    /*
+      - engine must always be rendered
+      - pass shallow props to avoid rerenders
+
+    */
 
     if (runEngine) {
       return (
