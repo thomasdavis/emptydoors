@@ -1,7 +1,32 @@
 import React from "react";
 import _ from "lodash";
+import axios from "axios";
 //armour
 // how to generate sprites
+
+/*
+TODO:
+- generate uids for entities
+- win / lose states
+- log everything
+- uid for the session
+-
+
+*/
+
+const bioGeneratorPrompt = `
+Name:Julia
+Race:Orc
+Weapon:Magic
+Interests:Gardening, killing men,  protecting people.
+Story:Our party approach Julia, she stared at us with eyes intent to kill. Amongst the dead bodies in the battle field, she looked strong and resilient.
+
+Name:Ajax
+Race:Orc
+Weapon:Axe
+Interests:Drinking, reading and writing
+Story:`;
+
 const races = {
   orc: {
     sprite: "",
@@ -13,13 +38,7 @@ const races = {
     health_modifier: 0.1,
   },
 };
-/*
-axe
-sword
-spear
-arrows
-magic
-*/
+
 const weapons = {
   spear: {
     damage: 10,
@@ -52,9 +71,10 @@ const saveState = {
     movement_speed: 20,
     health: 100,
     attack_speed: 20,
-    weapon: "magic",
+    weapon: "axe",
     name: "Thomas",
     race: "orc",
+    type: "warrior",
     status: "me",
     team: "ally",
     uid: "asd",
@@ -69,6 +89,7 @@ const saveState = {
       weapon: "spear",
       name: "Jemel",
       race: "orc",
+      type: "mage",
       status: "ally",
       uid: "asdd",
       last_attack_tick: 0,
@@ -81,7 +102,50 @@ const saveState = {
       attack_speed: 20,
       weapon: "magic",
       name: "James",
+      type: "archer",
       race: "orc",
+      status: "ally",
+      uid: "asd1212",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "ally",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "spear",
+      name: "Jemel",
+      race: "elf",
+      type: "mage",
+      status: "ally",
+      uid: "asdd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "ally",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "magic",
+      name: "James",
+      type: "archer",
+      race: "elf",
+      status: "ally",
+      uid: "asd1212",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "ally",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "magic",
+      name: "James",
+      type: "warrior",
+      race: "elf",
       status: "ally",
       uid: "asd1212",
       last_attack_tick: 0,
@@ -96,7 +160,8 @@ const saveState = {
       attack_speed: 20,
       weapon: "axe",
       name: "Roland",
-      race: "orc",
+      race: "human",
+      type: "warrior",
       status: "enemy",
       uid: "asxxxxd",
       last_attack_tick: 0,
@@ -107,56 +172,111 @@ const saveState = {
       movement_speed: 20,
       health: 100,
       attack_speed: 20,
-      weapon: "arrow",
-      name: "Curry",
-      race: "orc",
+      weapon: "axe",
+      name: "Roland",
+      race: "human",
+      type: "mage",
       status: "enemy",
-      uid: "asx22xxd",
+      uid: "asxxxxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "axe",
+      name: "Roland",
+      race: "human",
+      type: "archer",
+      status: "enemy",
+      uid: "asxxxxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "axe",
+      name: "Roland",
+      race: "fairy",
+      type: "warrior",
+      status: "enemy",
+      uid: "asxxxxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "axe",
+      name: "Roland",
+      race: "fairy",
+      type: "archer",
+      status: "enemy",
+      uid: "asxxxxd",
+      last_attack_tick: 0,
+      last_velocity_tick: 0,
+      team: "enemy",
+    },
+    {
+      movement_speed: 20,
+      health: 100,
+      attack_speed: 20,
+      weapon: "axe",
+      name: "Roland",
+      race: "fairy",
+      type: "mage",
+      status: "enemy",
+      uid: "asxxxxd",
       last_attack_tick: 0,
       last_velocity_tick: 0,
       team: "enemy",
     },
   ],
 };
-function degrees_to_radians(degrees) {
-  var pi = Math.PI;
-  return degrees * (pi / 180);
-}
-function angle(originX, originY, targetX, targetY) {
-  var dx = originX - targetX;
-  var dy = originY - targetY;
-
-  // var theta = Math.atan2(dy, dx); // [0, Ⲡ] then [-Ⲡ, 0]; clockwise; 0° = west
-  // theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; clockwise; 0° = west
-  // if (theta < 0) theta += 360; // [0, 360]; clockwise; 0° = west
-
-  var theta = Math.atan2(-dy, dx); // [0, Ⲡ] then [-Ⲡ, 0]; anticlockwise; 0° = west
-  theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; anticlockwise; 0° = west
-  if (theta < 0) theta += 360; // [0, 360]; anticlockwise; 0° = west
-
-  // var theta = Math.atan2(dy, -dx); // [0, Ⲡ] then [-Ⲡ, 0]; anticlockwise; 0° = east
-  // theta *= 180 / Math.PI;          // [0, 180] then [-180, 0]; anticlockwise; 0° = east
-  // if (theta < 0) theta += 360;     // [0, 360]; anticlockwise; 0° = east
-
-  // var theta = Math.atan2(-dy, -dx); // [0, Ⲡ] then [-Ⲡ, 0]; clockwise; 0° = east
-  // theta *= 180 / Math.PI; // [0, 180] then [-180, 0]; clockwise; 0° = east
-  // if (theta < 0) theta += 360; // [0, 360]; clockwise; 0° = east
-
-  return theta;
-}
-function makeNewCreature(options) {}
-
-function spawnAll() {
-  // make you
-  // make allies
-  // make enemies (similar to your party size)
-  // random creatures (neutral)
-  const creature = makeCreature();
-}
 
 let carrotTex = null; // PIXI.Texture.fromImage("spear.png");
 
 class Game extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      username: "",
+      bio: "",
+      beginned: false,
+      partying: true,
+      possibleParty: {
+        name: "Mel",
+        weapon: "Axe",
+        type: "Mage",
+      },
+    };
+  }
+  begin = (e) => {
+    e.preventDefault();
+    const name = "Ajax";
+    const bio = "I am a heaven";
+    this.setState({
+      name,
+      bio,
+      beginned: true,
+    });
+    return false;
+  };
+  componentDidMount = (e) => {
+    setTimeout(() => {
+      this.setState({ beginned: true });
+    }, 500);
+  };
+  componentDidUpdate = (prevProps, nextProps) => {
+    this.start();
+  };
   start = () => {
     //Aliases
     const Application = PIXI.Application,
@@ -169,7 +289,6 @@ class Game extends React.Component {
       Text = PIXI.Text,
       TextStyle = PIXI.TextStyle;
     function shoot(rotation, startPosition, spawn, sprite) {
-      console.log("a", spawn.data.last_attack_tick);
       spawn.data.last_attack_tick += 1;
       if (spawn.data.last_attack_tick > 60) {
         var bullet = new PIXI.Sprite(carrotTex);
@@ -219,6 +338,18 @@ class Game extends React.Component {
       .add("fireball.png")
       .add("arrow.png")
       .add("axe.png")
+      .add("elf_archer.png")
+      .add("elf_mage.png")
+      .add("elf_warrior.png")
+      .add("fairy_archer.png")
+      .add("fairy_mage.png")
+      .add("fairy_warrior.png")
+      .add("human_warrior.png")
+      .add("human_archer.png")
+      .add("human_mage.png")
+      .add("orc_mage.png")
+      .add("orc_warrior.png")
+      .add("orc_archer.png")
       .add("carrot.png")
       .add("door.png")
       .add("treasure.png")
@@ -279,7 +410,8 @@ class Game extends React.Component {
 
       // spawn allies
       saveState.allies.forEach((ally, index) => {
-        const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+        const spawnAssetName = `${ally.race}_${ally.type}.png`;
+        const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
         newSpawn.x = 68 + index * 40;
         newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
         newSpawn.data = { ...ally };
@@ -291,14 +423,14 @@ class Game extends React.Component {
 
       // spawn enemies
       saveState.enemies.forEach((enemy, index) => {
-        const newSpawn = new Sprite(PIXI.Texture.fromImage("explorer.png"));
+        const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
+        const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
         newSpawn.x = 428 + index * 40;
-        newSpawn.y =
-          gameScene.height / 2 - explorer.height / 2 + index * 60 + 150;
+        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
         newSpawn.data = { ...enemy };
         newSpawn.vx = 0;
         newSpawn.vy = 1;
-        newSpawn.alpha = 0.5;
+        // newSpawn.alpha = 0.5;
         gameScene.addChild(newSpawn);
         spawns.push(newSpawn);
         // attach combat
@@ -523,19 +655,13 @@ class Game extends React.Component {
         if (targets.length === 0) {
           return false;
         }
-        const calculatedAngle = angle(
-          spawna.x,
-          spawna.y,
-          closeTarget.x,
-          closeTarget.y
-        );
+
         // const rotationRadians = degrees_to_radians(calculatedAngle);
         const rotationRadians = Math.atan2(
           closeTarget.y - spawna.y,
           closeTarget.x - spawna.x
         );
         console.log("points", spawna.y, closeTarget.y, spawna.x, closeTarget.x);
-        console.log("angle", calculatedAngle);
         console.log("radians", rotationRadians);
         shoot(rotationRadians, spawna, spawna, bullet);
       });
@@ -881,27 +1007,104 @@ class Game extends React.Component {
     }
   };
   render() {
-    return (
-      <div className="container">
-        <div className="title">Empty People</div>
-        <div className="summary">
-          Goodluck, walk into thy enemy. <br />
-          <br />
-          Life gets difficult without friends
+    const { beginned, partying, possibleParty } = this.state;
+    const { name, bio, type, weapon } = possibleParty;
+    return <div />;
+    if (partying) {
+      return (
+        <div className="container ">
+          <div className="partyContainer">
+            <div className="charContainer">
+              <div className="charAvatar">
+                <img src="something.jpg" />
+              </div>
+              <div className="charTitle">
+                <span className="bioLabel">Name:</span> {name}
+              </div>
+              <div className="charRole">
+                <span className="bioLabel">Type:</span> {type}
+              </div>
+              <div className="charWeapon">
+                <span className="bioLabel">Weapon: </span>
+                {weapon}
+              </div>
+            </div>
+            <div className="discourseContainer">
+              <div className="bioContainer">
+                Kae is an elf who is very interested in nature and animals. She
+                loves to garden and take care of plants. She is also very
+                skilled with a bow and arrow,
+              </div>
+              <div className="responseContainer">
+                <div className="replyContainer">
+                  <div className="replyName">Mel:</div>
+                  <div className="replyContent">adasdada</div>
+                </div>{" "}
+                <div className="replyContainer">
+                  <div className="replyName">Mel:</div>
+                  <div className="replyContent">adasdada</div>
+                </div>{" "}
+                <div className="replyContainer">
+                  <div className="replyName">Mel:</div>
+                  <div className="replyContent">adasdada</div>
+                </div>{" "}
+                <div className="replyContainer">
+                  <div className="replyName">Mel:</div>
+                  <div className="replyContent">adasdada</div>
+                </div>
+                <div className="replyInputContainer">
+                  <textarea className="replyTextarea" />
+                </div>
+                <div className="talkButtonContainer">
+                  <button className="talkButton">SPEAK</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="formContainer"></div>
-        <div className="formLabel">Name:</div>
-        <input className="formInput" placeholder="..." />
-        <br />
-        <br />
-        <div className="formLabel">Bio:</div>
-        <textarea
-          className="formTextarea"
-          placeholder="One's self worth matters"
-        />
-        <button className="beginButton">BEGIN </button>
-      </div>
-    );
+      );
+    }
+
+    if (beginned) {
+      return <div className="container">no mans</div>;
+    }
+
+    if (!beginned) {
+      return (
+        <div className="container">
+          <div className="title">Empty People</div>
+          <div className="summary">
+            Goodluck, walk into thy enemy. <br />
+            <br />
+            Life gets difficult without friends
+          </div>
+          <div className="formContainer"></div>
+          <form onSubmit={this.begin}>
+            <div className="formLabel">Name:</div>
+            <input
+              pattern=".{3,}"
+              required
+              title="3 characters minimum"
+              className="formInput"
+              placeholder="..."
+            />
+            <br />
+            <br />
+            <div className="formLabel">Bio:</div>
+            <textarea
+              pattern=".{50,}"
+              required
+              title="50 characters minimum"
+              className="formTextarea"
+              placeholder="One's self worth matters"
+            />
+            <button type="submit" className="beginButton">
+              BEGIN{" "}
+            </button>
+          </form>
+        </div>
+      );
+    }
   }
 }
 
