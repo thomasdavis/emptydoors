@@ -1,7 +1,6 @@
 import React from "react";
 import _ from "lodash";
 import axios from "axios";
-import { creation, diaglogue } from "./dialogue";
 import { v4 as uuidv4 } from "uuid";
 import { nameByRace } from "fantasy-name-generator";
 // const { prompt } = dialogue;
