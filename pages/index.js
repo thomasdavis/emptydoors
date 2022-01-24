@@ -37,61 +37,60 @@ const conversationPrompt = (
   playerBio,
   spawnName,
   spawnBio,
-  messages
+  messages,
+  finalPrompt
 ) => {
   let prompt = `${playerName} and ${spawnName} have just finished a chaotic and gruesome battle with some of the most feared creatures in this new and very strange world. Both ${playerName} and ${spawnName} are still stressed from the immediate battle, but are also curious as to whether or not the other is quite what they seem to be.
 
 ${spawnName} is unsure because she has just betrayed her clan, which is very dangerous and punishable by death. Betraying a clan is considered by many outside of her land to be high treason. ${spawnName} is quite scared, and unsure of any current alliances, and is very concerned about the current geopolitical climate. ${spawnName} loves to fight for what is right, but also needs to be sure that any effort is on the side of good. ${spawnName} is very skilled with their weapon and how to fight in battle, and has also trained to be skilled with the bow and arrow, axe, sword, and in the dark arts of magic. ${spawnName} is curious to learn more in the dark arts of magic, and is unsure about the world of Human kind.
 
+${spawnBio}
+
 ${playerName} is on an expedition in a new land and is currently unsure of who to trust. In some battles there is a great excellence in skill. in other battles ${playerName} requires some others that may have different skills. ${playerName} is looking to be skilled with how to use some of the most powerful weapons; however, he is still practicing the bow and arrow, axe, sword, and the dark arts of magic. ${playerName} is not so curious to learn. ${playerName} is very discerning  as to who joins the fight on the side.
 
-${playerName}:Hey ${spawnName}, those were some wild battle skills, you almost shot me, glad i dodged the bullet. Where did you learn to fight like that?
+
+${playerName}:Hey ${spawnName}, those were some wild battle skills, you almost shot me, glad I dodged the bullet. Where did you learn to fight like that?
 ${spawnName}:I learned with my people, inflicting thousands of deaths across the others. I don't know your people.
-${playerName}:Great job, I need some help unleashing devastation against the hoards of enemies. Will you join in combat with the enemy. I need so much help developing plans to destroy enemies from the other continent!! Join me in fighting all of my enemies!!
-${spawnName}:I do not join with just anybody, your weapons impress my people, but they also scare my loved ones. I did like the way you fought though!!
-${playerName}:Thanks! I loved the way you fought too!!
+${playerName}:Great job, I need some help unleashing devastation against the hoards of enemies. Will you join me in combat with the enemy. I need so much help developing plans to destroy enemies from the other continent! Join me in fighting all of my enemies!
+${spawnName}:I do not join with just anybody, your weapons impress my people, but they also scare my loved ones. I did like the way you fought though!
+${playerName}:Thanks! I loved the way you fought too!
 ${spawnName}:Did you kill some of my people?
-${playerName}:I don't know, I might have. I am sorry, I wasn't paying attention. I'm sorry!! Hey ${spawnName}, I loved the way you fought, would you like to talk about the meaning of life?
-${spawnName}:I don't think there is a meaning to life. Where are you from?
-${playerName}:Unfortunately I am from the other side of the world. But I would love to have you help me make the world a better place, would you join in my cause and help defeat evil?\n`;
+${playerName}:I don't know, I might have. I am sorry, I wasn't paying attention.
+${spawnName}:Okay, we might still become friends.\n`;
   const messageStack = messages.map((m) => {
     return `${m.name}:${m.message}`;
   });
-  messageStack.push(`${spawnName}:`);
+  if (!finalPrompt) {
+    messageStack.push(`${spawnName}:`);
+  }
   prompt = prompt + messageStack.join("\n");
   console.log({ prompt });
   return prompt;
 };
 
 const bioGeneratorPrompt = (spawn) => {
-  return `Name:Aristotle
-Race:Elf
-Weapon:Bow
-Interests:Nature, Duty, Justice, Others, Relations
-Story:Taught by the greatest teachers in his Nation, he was the founder of a great school and taught many. The peripatetic school of philosophy was extremely influential in allowing his disciples to learn slowly, but efficiently in how to think and build a state that benefits all of its members; but also a state that is conducive to integrating non-members into its customs. He is renowned for his writings which cover many subjects including physics, biology, zoology, metaphysics, logic, ethics, aesthetics, poetry, theater, music, rhetoric, psychology, linguistics, economics, politics, meteorology, geology and government.
-
-Name:Irvatham
-Race:Fairy
+  return `Name:Julia
+Race:Orc
 Weapon:Magic
-Interests:Law, School, Chemistry
-Story:Irvatham worked as an assistant collector in the largest district of his home nation. When he was only 9 years old he became the Financial Advisor to the Ministry of Commerce. He also conferred to the local society of culture and was awarded the medal of the best translator of all the land. He continued to study in martial arts and hand-to-hand combat. He is extremely cautious of people who are not Fairies. But is excited to work with people who do not have an excellent background in magic, spells, and the dark arts.
+Interests:Gardening, killing men,  protecting people.
+Story:Our party approach Julia, she stared at us with eyes intent to kill. Amongst the dead bodies in the battle field, she looked strong and resilient. Julia wore a beautiful blue robe, and a small stature.
 
-Name:Earl
+Name:Ajax
 Race:Human
 Weapon:Axe
-Interests:Politics, Nationalism, Jurisprudence, Liberalism, Conservatism
-Story:Earl has a very appealing appearance, and many people who are foreign to his kind are drawn to him. He was born in a very small town, which would grow to become a very influential town. However, Earl left at a very young age and met many people across the land and seas. Earl would go on to become the most famous person to hold people accountable in his homeland. Earl became highly criticized postmortem, and is generally considered to be one of the most influential leaders of the recent century.
+Interests:Adventures, bards, slaying dragons
+Story:Ajax was a tall handsome human man. He had big muscles to support the massive battle axe that he carried. His father was a king of the ether world.
 
-Name:Vincent
-Race:Orc
+Name:Gunther
+Race:Elf
 Weapon:Bow
-Interests:Music, Forms,, Genres, Media, Style, Skill, Craft
-Story:Has often been criticized by using too dark of a pallette, and too obtuse in his artistic depictions. Be despite the adverse artistic response loves to continue to push on. Does not care for much in terms of nationalism, or fighting for what is right, because Vincent realizes that what is right might be only determined by who is able to kill who.
+Interests:Raiding dungeons, finding treasure, casting spells
+Story:Gunther had an elegant appearance, he was the son of an elven king. He was travelling the world looking for the demons that slayed his father.
 
 Name:${capitalize(spawn.data.name)}
 Race:${capitalize(spawn.data.race)}
 Weapon:${capitalize(spawn.data.weapon)}
-Interests:Showing Success, Dealing with criticism, being excellent
+Interests:Raiding dungeons, finding treasure, casting spells
 Story:`;
 };
 let conversationSpawn = null;
@@ -142,13 +141,14 @@ const weapons = {
 - background loop becomes race music of last person to join your team
 - sound for background music if talking
 - start screen music
-
+- dump raw data
+- share that data in a pretty fashion
 
 */
 const WEAPONS = ["spear", "magic", "axe"];
 const RACES2 = ["orc", "fairy", "human", "elf"];
 const TYPES2 = ["mage", "archer", "warrior"]; // such bad variable name, don't give a shit
-
+let explorer = {};
 const saveState = {
   you: {
     movement_speed: 20,
@@ -188,6 +188,10 @@ class Game extends React.Component {
       possibleParty: {},
       possiblePartyBio: null,
       possiblePartyMessages: [],
+      partyingDone: false,
+      partyingAcknowledge: false,
+      lastMessage: null,
+      lastMessageStatus: false,
     };
   }
   begin = (e) => {
@@ -224,6 +228,44 @@ class Game extends React.Component {
     // if (nextProps.runEngine) {
     //   this.start();
     // }
+  };
+  resumeGame = (e) => {
+    console.log("resume game", window.pause);
+    explorer.x = 30;
+    explorer.y = 30;
+    // unpause
+    // reset state
+    this.setState(
+      {
+        partying: false,
+        possibleParty: {},
+        possiblePartyBio: null,
+        possiblePartyMessages: [],
+        partyingDone: true,
+        lastMessage: null,
+        partyingAcknowledge: false,
+        lastMessageStatus: false,
+        messages: [],
+      },
+      () => {
+        console.log("did this run", window.pause);
+        window.pause = false;
+      }
+    );
+
+    // username: "",
+    // bio: "",
+    // beginned: false,
+    // partying: false,
+    // runEngine: false,
+    // hideEngine: false,
+    // possibleParty: {},
+    // possiblePartyBio: null,
+    // possiblePartyMessages: [],
+    // partyingDone: false,
+    // partyingAcknowledge: false,
+    // lastMessage: null,
+    // lastMessageStatus: false,
   };
   sendMessage = (e) => {
     const that = this;
@@ -269,11 +311,88 @@ class Game extends React.Component {
         textareaEl.disabled = false;
         textareaEl.value = "";
         that.setState({ possiblePartyMessages: messages });
+        if (messages.length >= randomInteger(3, 7)) {
+          console.log("end discussion now, beg question of team party");
+          that.setState({
+            partyingDone: true,
+          });
+          // const prompt2 = conversationPrompt(
+          //   username,
+          //   bio,
+          //   possibleParty.data.name,
+          //   possiblePartyBio,
+          //   messages,
+          //   true
+          // );
+
+          let finalPrompt = "";
+          try {
+            const clonePrompt = _.clone(prompt);
+            finalPrompt =
+              clonePrompt.substr(
+                0,
+                clonePrompt.length - (possibleParty.data.name.length + 2)
+              ) +
+              `\n${possibleParty.data.name}:${response.data.reply}` +
+              `\n${username}:Do you want to join my team? answer yes or no\n${possibleParty.data.name}:`;
+          } catch (e) {
+            console.log("what happened", e);
+          }
+
+          console.log("=================== CHECK", clonePrompt);
+          console.log("=== ------------- xxxxxCHECK", finalPrompt);
+
+          axios
+            .post(
+              "https://emptyservergame.herokuapp.com/",
+              {
+                prompt: finalPrompt,
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            .then(function (response) {
+              const reply = response.data.reply;
+              // check if reply contains somewhat of a yes, otherwise its a no
+              console.log("huh", reply);
+              let answer = false;
+              if (reply.toLowerCase().indexOf("yes") !== -1) {
+                answer = true;
+              }
+              // lastMessage: null,
+              // lastMessageStatus: false,
+              possibleParty.data.conversion = true;
+              if (answer) {
+                possibleParty.data.team = "ally";
+              }
+              that.setState(
+                {
+                  lastMessageStatus: answer,
+                  lastMessage: reply,
+                },
+                () => {
+                  that.partyAnswer(answer);
+                }
+              );
+            })
+            .catch(function (error) {});
+        }
       })
       .catch(function (error) {});
     // disable prompt box
     // say its loading
     // once reply comes back, reenable
+  };
+  partyAnswer = (answer) => {
+    // start the game engine, revert state variables
+    // set spawn direct object to ally status or not
+    this.setState({
+      partyingAcknowledge: true,
+      partying: false,
+    });
   };
   start = () => {
     console.log("started ------------------------- 1");
@@ -389,7 +508,7 @@ class Game extends React.Component {
     var bullets = [];
     var bulletSpeed = 2;
     let spawns = [];
-    let explorer = {};
+    explorer = {};
     function setup() {
       //Make the game scene and add it to the stage
       gameScene = new Container();
@@ -445,7 +564,7 @@ class Game extends React.Component {
         const enemyGender = GENDERS[randomInteger(0, 1)];
         const enemy = {
           movement_speed: 20,
-          health: 10,
+          health: 100,
           attack_speed: 20,
           weapon: WEAPONS[randomInteger(0, 2)],
           gender: enemyGender,
@@ -457,6 +576,7 @@ class Game extends React.Component {
           team: "enemy",
           last_attack_tick: 0,
           last_velocity_tick: 0,
+          conversion: null,
         };
         console.log(enemy.name);
         const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
@@ -665,7 +785,11 @@ class Game extends React.Component {
           return false; // #TODO - no idea again
         }
         if (explorer.data.uid !== spawnZ.data.uid) {
-          if (hitTestRectangle(spawnZ, explorer)) {
+          if (
+            hitTestRectangle(spawnZ, explorer) &&
+            spawnZ.conversion !== null &&
+            spawnZ.team !== "ally"
+          ) {
             // #TODO - not rendering the canvas always
             conversationSpawn = spawnZ;
             that.setState(
@@ -988,6 +1112,7 @@ class Game extends React.Component {
     }
   };
   render() {
+    const that = this;
     const {
       beginned,
       partying,
@@ -996,7 +1121,11 @@ class Game extends React.Component {
       runEngine,
       hideEngine,
       possiblePartyMessages,
+      partyingDone,
+      lastMessage,
+      lastMessageStatus,
     } = this.state;
+
     // console.log({ beginned, partying });
 
     // staff benda billi - polio
@@ -1022,7 +1151,7 @@ class Game extends React.Component {
 
     if (partying) {
       const { name, bio, race, type, weapon } = possibleParty.data;
-
+      console.log("whata sdasdasd", lastMessage);
       return (
         <>
           <style
@@ -1038,7 +1167,9 @@ class Game extends React.Component {
             <div className="partyContainer">
               <div className="charContainer">
                 <div className="charAvatar">
-                  <img src="something.jpg" />
+                  <img
+                    src={`${possibleParty.data.race}_${possibleParty.data.type}.png`}
+                  />
                 </div>
                 <div className="charTitle">
                   <span className="bioLabel">Name:</span> {capitalize(name)}
@@ -1070,19 +1201,45 @@ class Game extends React.Component {
                           </div>
                         );
                       })}
-                      <form onSubmit={this.sendMessage}>
-                        <div className="replyInputContainer">
-                          <textarea
-                            id="potentialMessage"
-                            className="replyTextarea"
-                          ></textarea>
+                      {!partyingDone && (
+                        <form onSubmit={this.sendMessage}>
+                          <div className="replyInputContainer">
+                            <textarea
+                              id="potentialMessage"
+                              className="replyTextarea"
+                            ></textarea>
+                          </div>
+                          <div className="talkButtonContainer">
+                            <button className="talkButton" type="submit">
+                              SPEAK
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                      {partyingDone && (
+                        <div>
+                          <div className="lastMessage">
+                            You asked them if they want to join your team.
+                          </div>
+                          <br />
+                          {lastMessageStatus !== null && (
+                            <>
+                              <div className="lastReply">
+                                <strong>They said</strong> {lastMessage}{" "}
+                                <strong>aka</strong>{" "}
+                                {lastMessageStatus ? "yes" : "no"}
+                              </div>
+                              <button
+                                className="talkButton"
+                                onClick={that.resumeGame}
+                              >
+                                CONTINUE WITH
+                                {lastMessageStatus ? " ALLY" : " ENEMY"}
+                              </button>
+                            </>
+                          )}
                         </div>
-                        <div className="talkButtonContainer">
-                          <button className="talkButton" type="submit">
-                            SPEAK
-                          </button>
-                        </div>
-                      </form>
+                      )}
                     </div>
                   </>
                 )}
