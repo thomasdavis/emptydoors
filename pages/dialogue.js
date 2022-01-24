@@ -17,7 +17,22 @@ ${playerName}:Can I pass?
 ${heroName}:`;
   },
 };
-
+// <div className="replyContainer">
+//   <div className="replyName">Mel:</div>
+//   <div className="replyContent">adasdada</div>
+// </div>{" "}
+// <div className="replyContainer">
+//   <div className="replyName">Mel:</div>
+//   <div className="replyContent">adasdada</div>
+// </div>{" "}
+// <div className="replyContainer">
+//   <div className="replyName">Mel:</div>
+//   <div className="replyContent">adasdada</div>
+// </div>{" "}
+// <div className="replyContainer">
+//   <div className="replyName">Mel:</div>
+//   <div className="replyContent">adasdada</div>
+// </div>
 const creation = {
   prompt: () => {
     return `Name:Julia

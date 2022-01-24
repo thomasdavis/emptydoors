@@ -2,6 +2,8 @@ import React from "react";
 import _ from "lodash";
 import axios from "axios";
 import { creation, diaglogue } from "./dialogue";
+import { v4 as uuidv4 } from "uuid";
+import { nameByRace } from "fantasy-name-generator";
 // const { prompt } = dialogue;
 // const { prompt } = creation;
 const logs = {};
@@ -9,7 +11,15 @@ const logs = {};
 function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
+function capitalize(str) {
+  if (!str) {
+    return "";
+  }
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.toLowerCase().slice(1))
+    .join(" ");
+}
 /*
 TODO:
 - win / lose states
@@ -17,19 +27,75 @@ TODO:
 - uid for the session
 */
 
-const bioGeneratorPrompt = `
-Name:Julia
-Race:Orc
+// const bioGeneratorPrompt = `
+//
+//
+//
+// `;
+
+const conversationPrompt = (
+  playerName,
+  playerBio,
+  spawnName,
+  spawnBio,
+  messages
+) => {
+  let prompt = `${playerName} and ${spawnName} have just finished a chaotic and gruesome battle with some of the most feared creatures in this new and very strange world. Both ${playerName} and ${spawnName} are still stressed from the immediate battle, but are also curious as to whether or not the other is quite what they seem to be.
+
+${spawnName} is unsure because she has just betrayed her clan, which is very dangerous and punishable by death. Betraying a clan is considered by many outside of her land to be high treason. ${spawnName} is quite scared, and unsure of any current alliances, and is very concerned about the current geopolitical climate. ${spawnName} loves to fight for what is right, but also needs to be sure that any effort is on the side of good. ${spawnName} is very skilled with their weapon and how to fight in battle, and has also trained to be skilled with the bow and arrow, axe, sword, and in the dark arts of magic. ${spawnName} is curious to learn more in the dark arts of magic, and is unsure about the world of Human kind.
+
+${playerName} is on an expedition in a new land and is currently unsure of who to trust. In some battles there is a great excellence in skill. in other battles ${playerName} requires some others that may have different skills. ${playerName} is looking to be skilled with how to use some of the most powerful weapons; however, he is still practicing the bow and arrow, axe, sword, and the dark arts of magic. ${playerName} is not so curious to learn. ${playerName} is very discerning  as to who joins the fight on the side.
+
+${playerName}:Hey ${spawnName}, those were some wild battle skills, you almost shot me, glad i dodged the bullet. Where did you learn to fight like that?
+${spawnName}:I learned with my people, inflicting thousands of deaths across the others. I don't know your people.
+${playerName}:Great job, I need some help unleashing devastation against the hoards of enemies. Will you join in combat with the enemy. I need so much help developing plans to destroy enemies from the other continent!! Join me in fighting all of my enemies!!
+${spawnName}:I do not join with just anybody, your weapons impress my people, but they also scare my loved ones. I did like the way you fought though!!
+${playerName}:Thanks! I loved the way you fought too!!
+${spawnName}:Did you kill some of my people?
+${playerName}:I don't know, I might have. I am sorry, I wasn't paying attention. I'm sorry!! Hey ${spawnName}, I loved the way you fought, would you like to talk about the meaning of life?
+${spawnName}:I don't think there is a meaning to life. Where are you from?
+${playerName}:Unfortunately I am from the other side of the world. But I would love to have you help me make the world a better place, would you join in my cause and help defeat evil?\n`;
+  const messageStack = messages.map((m) => {
+    return `${m.name}:${m.message}`;
+  });
+  messageStack.push(`${spawnName}:`);
+  prompt = prompt + messageStack.join("\n");
+  console.log({ prompt });
+  return prompt;
+};
+
+const bioGeneratorPrompt = (spawn) => {
+  return `Name:Aristotle
+Race:Elf
+Weapon:Bow
+Interests:Nature, Duty, Justice, Others, Relations
+Story:Taught by the greatest teachers in his Nation, he was the founder of a great school and taught many. The peripatetic school of philosophy was extremely influential in allowing his disciples to learn slowly, but efficiently in how to think and build a state that benefits all of its members; but also a state that is conducive to integrating non-members into its customs. He is renowned for his writings which cover many subjects including physics, biology, zoology, metaphysics, logic, ethics, aesthetics, poetry, theater, music, rhetoric, psychology, linguistics, economics, politics, meteorology, geology and government.
+
+Name:Irvatham
+Race:Fairy
 Weapon:Magic
-Interests:Gardening, killing men,  protecting people.
-Story:Our party approach Julia, she stared at us with eyes intent to kill. Amongst the dead bodies in the battle field, she looked strong and resilient.
+Interests:Law, School, Chemistry
+Story:Irvatham worked as an assistant collector in the largest district of his home nation. When he was only 9 years old he became the Financial Advisor to the Ministry of Commerce. He also conferred to the local society of culture and was awarded the medal of the best translator of all the land. He continued to study in martial arts and hand-to-hand combat. He is extremely cautious of people who are not Fairies. But is excited to work with people who do not have an excellent background in magic, spells, and the dark arts.
 
-Name:Ajax
-Race:Orc
+Name:Earl
+Race:Human
 Weapon:Axe
-Interests:Drinking, reading and writing
-Story:`;
+Interests:Politics, Nationalism, Jurisprudence, Liberalism, Conservatism
+Story:Earl has a very appealing appearance, and many people who are foreign to his kind are drawn to him. He was born in a very small town, which would grow to become a very influential town. However, Earl left at a very young age and met many people across the land and seas. Earl would go on to become the most famous person to hold people accountable in his homeland. Earl became highly criticized postmortem, and is generally considered to be one of the most influential leaders of the recent century.
 
+Name:Vincent
+Race:Orc
+Weapon:Bow
+Interests:Music, Forms,, Genres, Media, Style, Skill, Craft
+Story:Has often been criticized by using too dark of a pallette, and too obtuse in his artistic depictions. Be despite the adverse artistic response loves to continue to push on. Does not care for much in terms of nationalism, or fighting for what is right, because Vincent realizes that what is right might be only determined by who is able to kill who.
+
+Name:${capitalize(spawn.data.name)}
+Race:${capitalize(spawn.data.race)}
+Weapon:${capitalize(spawn.data.weapon)}
+Interests:Showing Success, Dealing with criticism, being excellent
+Story:`;
+};
+let conversationSpawn = null;
 const races = {
   orc: {
     sprite: "",
@@ -44,6 +110,13 @@ const races = {
 
 const weapons = {
   magic: {
+    damage: 20,
+    attack_speed: 40,
+    range: 100,
+    attack_time: 10,
+    type: "projectile",
+  },
+  spear: {
     damage: 20,
     attack_speed: 40,
     range: 100,
@@ -65,15 +138,24 @@ const weapons = {
     attack_time: 20,
   },
 };
+
+/*
+- background loop becomes race music of last person to join your team
+- sound for background music if talking
+- start screen music
+
+
+*/
+const WEAPONS = ["spear", "magic", "axe"];
 const RACES2 = ["orc", "fairy", "human", "elf"];
-const TYPES2 = ["magic", "warrior", "archer"]; // such bad variable name, don't give a shit
+const TYPES2 = ["mage", "archer", "warrior"]; // such bad variable name, don't give a shit
 
 const saveState = {
   you: {
     movement_speed: 20,
     health: 10000000,
     attack_speed: 20,
-    weapon: "axe",
+    weapon: "spear",
     name: "Thomas",
     race: RACES2[randomInteger(0, 3)],
     type: TYPES2[randomInteger(0, 2)],
@@ -88,6 +170,11 @@ const saveState = {
 };
 const levels = [];
 let carrotTex = null; // PIXI.Texture.fromImage("spear.png");
+let playerState = {
+  name: "",
+  bio: "",
+  talk: [],
+};
 
 class Game extends React.Component {
   constructor() {
@@ -99,11 +186,9 @@ class Game extends React.Component {
       partying: false,
       runEngine: false,
       hideEngine: false,
-      possibleParty: {
-        name: "Mel",
-        weapon: "Axe",
-        type: "Mage",
-      },
+      possibleParty: {},
+      possiblePartyBio: null,
+      possiblePartyMessages: [],
     };
   }
   begin = (e) => {
@@ -135,11 +220,61 @@ class Game extends React.Component {
     if (prevState.beginned !== this.state.beginned) {
       setTimeout(() => {
         this.start();
-      }, 2000);
+      }, 500);
     }
     // if (nextProps.runEngine) {
     //   this.start();
     // }
+  };
+  sendMessage = (e) => {
+    const that = this;
+    // possibleParty: {},
+    // possiblePartyBio: null,
+    const { username, bio, possibleParty, possiblePartyBio } = this.state;
+    const messages = _.clone(this.state.possiblePartyMessages);
+    // get value of prompt box
+    e.preventDefault();
+    const textareaEl = document.getElementById("potentialMessage");
+    console.log(textareaEl.value);
+    textareaEl.disabled = true;
+    const potentialMessage = textareaEl.value;
+    messages.push({ name: username, message: potentialMessage });
+    that.setState({ possiblePartyMessages: messages });
+    const prompt = conversationPrompt(
+      username,
+      bio,
+      possibleParty.data.name,
+      possiblePartyBio,
+      messages
+    );
+    console.log(prompt);
+    axios
+      .post(
+        "https://emptyservergame.herokuapp.com/",
+        {
+          prompt,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then(function (response) {
+        console.log("what happened", response);
+        messages.push({
+          name: possibleParty.data.name,
+          message: response.data.reply,
+        });
+        console.log(messages);
+        textareaEl.disabled = false;
+        textareaEl.value = "";
+        that.setState({ possiblePartyMessages: messages });
+      })
+      .catch(function (error) {});
+    // disable prompt box
+    // say its loading
+    // once reply comes back, reenable
   };
   start = () => {
     console.log("started ------------------------- 1");
@@ -276,14 +411,13 @@ class Game extends React.Component {
       // gameScene.addChild(door);
 
       //Explorer
-      explorer.data = saveState.you;
-      const explorerAssetName = `${explorer.data.race}_${explorer.data.type}.png`;
+      const explorerAssetName = `${saveState.you.race}_${saveState.you.type}.png`;
 
       explorer = new Sprite(PIXI.Texture.fromImage(explorerAssetName));
       // explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
-
-      explorer.x = 68;
-      explorer.y = gameScene.height / 2 - explorer.height / 2;
+      explorer.data = saveState.you;
+      explorer.x = 30;
+      explorer.y = 30;
       explorer.vx = 0;
       explorer.vy = 0;
 
@@ -303,20 +437,56 @@ class Game extends React.Component {
         spawns.push(newSpawn);
       });
 
-      // spawn enemies
-      saveState.enemies.forEach((enemy, index) => {
+      let spawnRate = 5000;
+
+      const spawnRandomEnemy = () => {
+        console.log("spawnRandomEnemy");
+        const GENDERS = ["male", "female"];
+        const enemyRace = RACES2[randomInteger(0, 3)];
+        const enemyGender = GENDERS[randomInteger(0, 1)];
+        const enemy = {
+          movement_speed: 20,
+          health: 10,
+          attack_speed: 20,
+          weapon: WEAPONS[randomInteger(0, 2)],
+          gender: enemyGender,
+          name: nameByRace(enemyRace, { gender: enemyGender }),
+          uid: uuidv4(),
+          race: enemyRace,
+          type: TYPES2[randomInteger(0, 2)],
+          status: "enemy",
+          team: "enemy",
+          last_attack_tick: 0,
+          last_velocity_tick: 0,
+        };
+        console.log(enemy.name);
         const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
+        console.log(spawnAssetName);
         const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
-        newSpawn.x = 428 + index * 40;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+        newSpawn.x = 428;
+        newSpawn.y = 460;
         newSpawn.data = { ...enemy };
         newSpawn.vx = 0;
         newSpawn.vy = 1;
         // newSpawn.alpha = 0.5;
         gameScene.addChild(newSpawn);
         spawns.push(newSpawn);
-        // attach combat
-      });
+      };
+      setInterval(spawnRandomEnemy, spawnRate);
+      // spawn enemies
+      // saveState.enemies.forEach((enemy, index) => {
+      //   const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
+      //   const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
+      //   newSpawn.x = 428 + index * 40;
+      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
+      //   newSpawn.data = { ...enemy };
+      //   newSpawn.vx = 0;
+      //   newSpawn.vy = 1;
+      //   // newSpawn.alpha = 0.5;
+      //   gameScene.addChild(newSpawn);
+      //   spawns.push(newSpawn);
+      //   // attach combat
+      // });
 
       //Create the health bar
       healthBar = new Container();
@@ -365,7 +535,7 @@ class Game extends React.Component {
       //Left arrow key `press` method
       left.press = function () {
         //Change the explorer's velocity when the key is pressed
-        explorer.vx = -2;
+        explorer.vx = -7;
         explorer.vy = 0;
       };
 
@@ -381,7 +551,7 @@ class Game extends React.Component {
 
       //Up
       up.press = function () {
-        explorer.vy = -2;
+        explorer.vy = -7;
         explorer.vx = 0;
       };
       up.release = function () {
@@ -392,7 +562,7 @@ class Game extends React.Component {
 
       //Right
       right.press = function () {
-        explorer.vx = 2;
+        explorer.vx = 7;
         explorer.vy = 0;
       };
       right.release = function () {
@@ -403,7 +573,7 @@ class Game extends React.Component {
 
       //Down
       down.press = function () {
-        explorer.vy = 2;
+        explorer.vy = 7;
         explorer.vx = 0;
       };
       down.release = function () {
@@ -450,7 +620,6 @@ class Game extends React.Component {
         let targets = [];
         spawns.forEach((targetSpawn) => {
           if (!spawna.data) {
-            console.log("aasa", spawna);
             return false; // #TODO - no idea
           }
           if (
@@ -496,20 +665,36 @@ class Game extends React.Component {
         if (!spawnZ.data) {
           return false; // #TODO - no idea again
         }
-        console.log("id test", explorer.data.uid, spawnZ.data.uid);
         if (explorer.data.uid !== spawnZ.data.uid) {
-          console.log("not my cousin");
           if (hitTestRectangle(spawnZ, explorer)) {
-            console.log("double id test", explorer.data.uid, spawnZ.data.uid);
-            console.log("whjy", explorer.x, spawnZ.x, explorer.y, spawnZ.y);
-            console.log("you git some other cunt");
-            // alert("you git some other cunt");
             // #TODO - not rendering the canvas always
-
+            conversationSpawn = spawnZ;
             that.setState(
-              { partying: true, hideEngine: true, runEngine: false },
+              {
+                partying: true,
+                hideEngine: true,
+                runEngine: false,
+                possibleParty: spawnZ,
+              },
               () => {
                 window.pause = true;
+                axios
+                  .post(
+                    "https://emptyservergame.herokuapp.com/",
+                    {
+                      prompt: bioGeneratorPrompt(spawnZ),
+                    },
+                    {
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  )
+                  .then(function (response) {
+                    console.log("what happened", response);
+                    that.setState({ possiblePartyBio: response.data.reply });
+                  })
+                  .catch(function (error) {});
               }
             );
           }
@@ -784,7 +969,6 @@ class Game extends React.Component {
           key.isDown = true;
           key.isUp = false;
         }
-        event.preventDefault();
       };
 
       //The `upHandler`
@@ -796,7 +980,6 @@ class Game extends React.Component {
           key.isDown = false;
           key.isUp = true;
         }
-        event.preventDefault();
       };
 
       //Attach event listeners
@@ -810,10 +993,11 @@ class Game extends React.Component {
       beginned,
       partying,
       possibleParty,
+      possiblePartyBio,
       runEngine,
       hideEngine,
+      possiblePartyMessages,
     } = this.state;
-    const { name, bio, type, weapon } = possibleParty;
     // console.log({ beginned, partying });
 
     // staff benda billi - polio
@@ -835,8 +1019,11 @@ class Game extends React.Component {
         </div>
       );
     }
+    console.log("rerender");
 
     if (partying) {
+      const { name, bio, race, type, weapon } = possibleParty.data;
+
       return (
         <>
           <style
@@ -855,53 +1042,58 @@ class Game extends React.Component {
                   <img src="something.jpg" />
                 </div>
                 <div className="charTitle">
-                  <span className="bioLabel">Name:</span> {name}
+                  <span className="bioLabel">Name:</span> {capitalize(name)}
+                </div>
+
+                <div className="charRace">
+                  <span className="bioLabel">Race:</span> {capitalize(race)}
                 </div>
                 <div className="charRole">
-                  <span className="bioLabel">Type:</span> {type}
+                  <span className="bioLabel">Type:</span> {capitalize(type)}
                 </div>
                 <div className="charWeapon">
                   <span className="bioLabel">Weapon: </span>
-                  {weapon}
+                  {capitalize(weapon)}
                 </div>
               </div>
               <div className="discourseContainer">
-                <div className="bioContainer">
-                  Kae is an elf who is very interested in nature and animals.
-                  She loves to garden and take care of plants. She is also very
-                  skilled with a bow and arrow,
-                </div>
-                <div className="responseContainer">
-                  <div className="replyContainer">
-                    <div className="replyName">Mel:</div>
-                    <div className="replyContent">adasdada</div>
-                  </div>{" "}
-                  <div className="replyContainer">
-                    <div className="replyName">Mel:</div>
-                    <div className="replyContent">adasdada</div>
-                  </div>{" "}
-                  <div className="replyContainer">
-                    <div className="replyName">Mel:</div>
-                    <div className="replyContent">adasdada</div>
-                  </div>{" "}
-                  <div className="replyContainer">
-                    <div className="replyName">Mel:</div>
-                    <div className="replyContent">adasdada</div>
-                  </div>
-                  <div className="replyInputContainer">
-                    <textarea className="replyTextarea" />
-                  </div>
-                  <div className="talkButtonContainer">
-                    <button className="talkButton">SPEAK</button>
-                  </div>
-                </div>
+                {possiblePartyBio && (
+                  <>
+                    <div className="bioContainer">{possiblePartyBio}</div>
+                    <div className="responseContainer">
+                      {possiblePartyMessages.map((message) => {
+                        return (
+                          <div className="replyContainer">
+                            <div className="replyName">{message.name}:</div>
+                            <div className="replyContent">
+                              {message.message}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <form onSubmit={this.sendMessage}>
+                        <div className="replyInputContainer">
+                          <textarea
+                            id="potentialMessage"
+                            className="replyTextarea"
+                          ></textarea>
+                        </div>
+                        <div className="talkButtonContainer">
+                          <button className="talkButton" type="submit">
+                            SPEAK
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </>
+                )}
+                {!possiblePartyBio && <div>loading bio...</div>}
               </div>
             </div>
           </div>
         </>
       );
     }
-
     if (!beginned) {
       // #MUSIC
       return (
@@ -918,6 +1110,7 @@ class Game extends React.Component {
             <input
               pattern=".{3,}"
               required
+              value="Ajax"
               title="3 characters minimum"
               className="formInput"
               placeholder="..."
@@ -928,6 +1121,7 @@ class Game extends React.Component {
             <textarea
               pattern=".{50,}"
               required
+              value="Ajax is a beautiful Australian man"
               title="50 characters minimum"
               className="formTextarea"
               placeholder="One's self worth matters"
