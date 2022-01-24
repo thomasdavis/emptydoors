@@ -362,7 +362,7 @@ class Game extends React.Component {
               const reply = response.data.reply;
               // check if reply contains somewhat of a yes, otherwise its a no
               console.log("huh", reply);
-              let answer = true;
+              let answer = false;
               if (reply.toLowerCase().indexOf("yes") !== -1) {
                 answer = true;
               }
