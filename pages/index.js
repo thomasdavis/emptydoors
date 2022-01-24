@@ -189,6 +189,7 @@ class Game extends React.Component {
       possiblePartyBio: null,
       possiblePartyMessages: [],
       partyingDone: false,
+      loadingLastQuestion: false,
       partyingAcknowledge: false,
       lastMessage: null,
       lastMessageStatus: false,
@@ -238,10 +239,11 @@ class Game extends React.Component {
     this.setState(
       {
         partying: false,
+        partyingDone: false,
         possibleParty: {},
         possiblePartyBio: null,
         possiblePartyMessages: [],
-        partyingDone: true,
+        loadingLastQuestion: false,
         lastMessage: null,
         partyingAcknowledge: false,
         lastMessageStatus: false,
@@ -312,9 +314,11 @@ class Game extends React.Component {
         textareaEl.value = "";
         that.setState({ possiblePartyMessages: messages });
         if (messages.length >= randomInteger(3, 7)) {
+          // if (messages.length >= 1) {
           console.log("end discussion now, beg question of team party");
           that.setState({
             partyingDone: true,
+            loadingLastQuestion: true,
           });
           // const prompt2 = conversationPrompt(
           //   username,
@@ -358,7 +362,7 @@ class Game extends React.Component {
               const reply = response.data.reply;
               // check if reply contains somewhat of a yes, otherwise its a no
               console.log("huh", reply);
-              let answer = false;
+              let answer = true;
               if (reply.toLowerCase().indexOf("yes") !== -1) {
                 answer = true;
               }
@@ -372,6 +376,7 @@ class Game extends React.Component {
                 {
                   lastMessageStatus: answer,
                   lastMessage: reply,
+                  loadingLastQuestion: false,
                 },
                 () => {
                   that.partyAnswer(answer);
@@ -391,7 +396,6 @@ class Game extends React.Component {
     // set spawn direct object to ally status or not
     this.setState({
       partyingAcknowledge: true,
-      partying: false,
     });
   };
   start = () => {
@@ -1124,6 +1128,7 @@ class Game extends React.Component {
       partyingDone,
       lastMessage,
       lastMessageStatus,
+      loadingLastQuestion,
     } = this.state;
 
     // console.log({ beginned, partying });
@@ -1222,7 +1227,8 @@ class Game extends React.Component {
                             You asked them if they want to join your team.
                           </div>
                           <br />
-                          {lastMessageStatus !== null && (
+                          {loadingLastQuestion && <div>loading...</div>}
+                          {!loadingLastQuestion && lastMessageStatus !== null && (
                             <>
                               <div className="lastReply">
                                 <strong>They said</strong> {lastMessage}{" "}
