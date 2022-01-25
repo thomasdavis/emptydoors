@@ -1147,7 +1147,6 @@ class Game extends React.Component {
     if (runEngine) {
       return (
         <div style={{ display: hideEngine ? "hidden" : "block" }}>
-          render game
           <div id="gameContainer" />
         </div>
       );
@@ -1295,7 +1294,7 @@ class Game extends React.Component {
         </div>
       );
     }
-    return <div>Who gives a shit</div>;
+    return <div></div>;
   }
 }
 
