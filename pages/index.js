@@ -152,7 +152,7 @@ let explorer = {};
 const saveState = {
   you: {
     movement_speed: 20,
-    health: 10000000,
+    health: 1000,
     attack_speed: 20,
     weapon: "spear",
     name: "Thomas",
@@ -198,8 +198,8 @@ class Game extends React.Component {
   begin = (e) => {
     e.preventDefault();
     // #TODOFIXTHIS
-    const username = "Ajax";
-    const bio = "I am a heavenly Orc who was blessed with piano skills";
+    const username = document.getElementById("inputName").value;
+    const bio = document.getElementById("inputBio").value;
     this.setState({
       username,
       bio,
@@ -212,6 +212,7 @@ class Game extends React.Component {
     // setTimeout(() => {
     //   this.setState({ beginned: true });
     // }, 500);
+    window.allowSpawn = false;
     createjs.Sound.alternateExtensions = ["mp3"];
     createjs.Sound.registerSound({ src: "spear.mp3", id: "spear" });
     createjs.Sound.registerSound({ src: "axe.mp3", id: "axe" });
@@ -225,6 +226,11 @@ class Game extends React.Component {
       setTimeout(() => {
         this.start();
       }, 500);
+    }
+    if (this.state.partying === true && this.state.partying !== prevProps) {
+      window.allowSpawn = false;
+    } else {
+      window.allowSpawn = true;
     }
     // if (nextProps.runEngine) {
     //   this.start();
@@ -313,7 +319,7 @@ class Game extends React.Component {
         textareaEl.disabled = false;
         textareaEl.value = "";
         that.setState({ possiblePartyMessages: messages });
-        if (messages.length >= randomInteger(3, 7)) {
+        if (messages.length >= randomInteger(5, 9)) {
           // if (messages.length >= 1) {
           console.log("end discussion now, beg question of team party");
           that.setState({
@@ -546,70 +552,45 @@ class Game extends React.Component {
       spawns.push(explorer);
       gameScene.addChild(explorer);
 
-      // spawn allies
-      saveState.allies.forEach((ally, index) => {
-        const spawnAssetName = `${ally.race}_${ally.type}.png`;
-        const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
-        newSpawn.x = 68 + index * 40;
-        newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-        newSpawn.data = { ...ally };
-        newSpawn.vx = 0;
-        newSpawn.vy = 1;
-        gameScene.addChild(newSpawn);
-        spawns.push(newSpawn);
-      });
-
       let spawnRate = 5000;
 
       const spawnRandomEnemy = () => {
-        console.log("spawnRandomEnemy");
-        const GENDERS = ["male", "female"];
-        const enemyRace = RACES2[randomInteger(0, 3)];
-        const enemyGender = GENDERS[randomInteger(0, 1)];
-        const enemy = {
-          movement_speed: 20,
-          health: 100,
-          attack_speed: 20,
-          weapon: WEAPONS[randomInteger(0, 2)],
-          gender: enemyGender,
-          name: nameByRace(enemyRace, { gender: enemyGender }),
-          uid: uuidv4(),
-          race: enemyRace,
-          type: TYPES2[randomInteger(0, 2)],
-          status: "enemy",
-          team: "enemy",
-          last_attack_tick: 0,
-          last_velocity_tick: 0,
-          conversion: null,
-        };
-        console.log(enemy.name);
-        const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
-        console.log(spawnAssetName);
-        const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
-        newSpawn.x = 428;
-        newSpawn.y = 460;
-        newSpawn.data = { ...enemy };
-        newSpawn.vx = 0;
-        newSpawn.vy = 1;
-        // newSpawn.alpha = 0.5;
-        gameScene.addChild(newSpawn);
-        spawns.push(newSpawn);
+        if (window.allowSpawn) {
+          console.log("spawnRandomEnemy");
+          const GENDERS = ["male", "female"];
+          const enemyRace = RACES2[randomInteger(0, 3)];
+          const enemyGender = GENDERS[randomInteger(0, 1)];
+          const enemy = {
+            movement_speed: 20,
+            health: 100,
+            attack_speed: 20,
+            weapon: WEAPONS[randomInteger(0, 2)],
+            gender: enemyGender,
+            name: nameByRace(enemyRace, { gender: enemyGender }),
+            uid: uuidv4(),
+            race: enemyRace,
+            type: TYPES2[randomInteger(0, 2)],
+            status: "enemy",
+            team: "enemy",
+            last_attack_tick: 0,
+            last_velocity_tick: 0,
+            conversion: null,
+          };
+          console.log(enemy.name);
+          const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
+          console.log(spawnAssetName);
+          const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
+          newSpawn.x = 428;
+          newSpawn.y = 460;
+          newSpawn.data = { ...enemy };
+          newSpawn.vx = 0;
+          newSpawn.vy = 1;
+          // newSpawn.alpha = 0.5;
+          gameScene.addChild(newSpawn);
+          spawns.push(newSpawn);
+        }
       };
       setInterval(spawnRandomEnemy, spawnRate);
-      // spawn enemies
-      // saveState.enemies.forEach((enemy, index) => {
-      //   const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
-      //   const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
-      //   newSpawn.x = 428 + index * 40;
-      //   newSpawn.y = gameScene.height / 2 - explorer.height / 2 + index * 60;
-      //   newSpawn.data = { ...enemy };
-      //   newSpawn.vx = 0;
-      //   newSpawn.vy = 1;
-      //   // newSpawn.alpha = 0.5;
-      //   gameScene.addChild(newSpawn);
-      //   spawns.push(newSpawn);
-      //   // attach combat
-      // });
 
       //Create the health bar
       healthBar = new Container();
@@ -789,10 +770,11 @@ class Game extends React.Component {
           return false; // #TODO - no idea again
         }
         if (explorer.data.uid !== spawnZ.data.uid) {
+          console.log(spawnZ);
           if (
             hitTestRectangle(spawnZ, explorer) &&
-            spawnZ.conversion !== null &&
-            spawnZ.team !== "ally"
+            spawnZ.data.conversion === null &&
+            spawnZ.data.team === "enemy"
           ) {
             // #TODO - not rendering the canvas always
             conversationSpawn = spawnZ;
@@ -1271,8 +1253,8 @@ class Game extends React.Component {
             <input
               pattern=".{3,}"
               required
-              value="Ajax"
               title="3 characters minimum"
+              id="inputName"
               className="formInput"
               placeholder="..."
             />
@@ -1282,8 +1264,8 @@ class Game extends React.Component {
             <textarea
               pattern=".{50,}"
               required
-              value="Ajax is a beautiful Australian man"
               title="50 characters minimum"
+              id="inputBio"
               className="formTextarea"
               placeholder="One's self worth matters"
             />
