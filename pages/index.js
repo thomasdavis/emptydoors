@@ -437,16 +437,24 @@ class Game extends React.Component {
       ) {
         var bullet = new PIXI.Sprite(carrotTex);
         if (spawn.data.weapon === "axe") {
-          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("axe.png"));
+          bullet = new PIXI.Sprite(
+            PIXI.Texture.fromImage("https://emptydoors.vercel.app/axe.png")
+          );
         }
         if (spawn.data.weapon === "spear") {
-          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("spear.png"));
+          bullet = new PIXI.Sprite(
+            PIXI.Texture.fromImage("https://emptydoors.vercel.app/spear.png")
+          );
         }
         if (spawn.data.weapon === "magic") {
-          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("fireball.png"));
+          bullet = new PIXI.Sprite(
+            PIXI.Texture.fromImage("https://emptydoors.vercel.app/fireball.png")
+          );
         }
         if (spawn.data.weapon === "arrow") {
-          bullet = new PIXI.Sprite(PIXI.Texture.fromImage("arrow.png"));
+          bullet = new PIXI.Sprite(
+            PIXI.Texture.fromImage("https://emptydoors.vercel.app/arrow.png")
+          );
         }
         bullet.position.x = startPosition.x;
         bullet.position.y = startPosition.y;
@@ -471,7 +479,9 @@ class Game extends React.Component {
       }
     }
 
-    carrotTex = PIXI.Texture.fromImage("spear.png");
+    carrotTex = PIXI.Texture.fromImage(
+      "https://emptydoors.vercel.app/spear.png"
+    );
 
     //Create a Pixi Application
     const app = new Application({
@@ -541,7 +551,9 @@ class Game extends React.Component {
 
       //Dungeon
 
-      let dungeonSprite = new Sprite(PIXI.Texture.fromImage("dungeon.png"));
+      let dungeonSprite = new Sprite(
+        PIXI.Texture.fromImage("https://emptydoors.vercel.app/dungeon.png")
+      );
       gameScene.addChild(dungeonSprite);
 
       //Door
@@ -551,7 +563,7 @@ class Game extends React.Component {
       // gameScene.addChild(door);
 
       //Explorer
-      const explorerAssetName = `${saveState.you.race}_${saveState.you.type}.png`;
+      const explorerAssetName = `https://emptydoors.vercel.app/${saveState.you.race}_${saveState.you.type}.png`;
 
       explorer = new Sprite(PIXI.Texture.fromImage(explorerAssetName));
       // explorer = new Sprite(PIXI.Texture.fromImage("explorer.png"));
@@ -589,7 +601,7 @@ class Game extends React.Component {
             conversion: null,
           };
           console.log(enemy.name);
-          const spawnAssetName = `${enemy.race}_${enemy.type}.png`;
+          const spawnAssetName = `https://emptydoors.vercel.app/${enemy.race}_${enemy.type}.png`;
           console.log(spawnAssetName);
           const newSpawn = new Sprite(PIXI.Texture.fromImage(spawnAssetName));
           newSpawn.x = 428;
@@ -1166,7 +1178,7 @@ class Game extends React.Component {
               <div className="charContainer">
                 <div className="charAvatar">
                   <img
-                    src={`${possibleParty.data.race}_${possibleParty.data.type}.png`}
+                    src={`https://emptydoors.vercel.app/${possibleParty.data.race}_${possibleParty.data.type}.png`}
                   />
                 </div>
                 <div className="charTitle">
