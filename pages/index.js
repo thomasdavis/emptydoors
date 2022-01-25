@@ -214,10 +214,22 @@ class Game extends React.Component {
     // }, 500);
     window.allowSpawn = false;
     createjs.Sound.alternateExtensions = ["mp3"];
-    createjs.Sound.registerSound({ src: "spear.mp3", id: "spear" });
-    createjs.Sound.registerSound({ src: "axe.mp3", id: "axe" });
-    createjs.Sound.registerSound({ src: "magic.mp3", id: "magic" });
-    createjs.Sound.registerSound({ src: "arrow.mp3", id: "arrow" });
+    createjs.Sound.registerSound({
+      src: "https://emptydoors.vercel.app/spear.mp3",
+      id: "spear",
+    });
+    createjs.Sound.registerSound({
+      src: "https://emptydoors.vercel.app/axe.mp3",
+      id: "axe",
+    });
+    createjs.Sound.registerSound({
+      src: "https://emptydoors.vercel.app/magic.mp3",
+      id: "magic",
+    });
+    createjs.Sound.registerSound({
+      src: "https://emptydoors.vercel.app/arrow.mp3",
+      id: "arrow",
+    });
   };
   componentDidUpdate = (prevProps, prevState) => {
     // if beginning went from no to yes . make an if
@@ -477,26 +489,26 @@ class Game extends React.Component {
     // gameContainer.appendChild(app.view);
     document.body.appendChild(app.view);
     loader
-      .add("spear.png")
-      .add("fireball.png")
-      .add("arrow.png")
-      .add("axe.png")
-      .add("elf_archer.png")
-      .add("elf_mage.png")
-      .add("elf_warrior.png")
-      .add("fairy_archer.png")
-      .add("fairy_mage.png")
-      .add("fairy_warrior.png")
-      .add("human_warrior.png")
-      .add("human_archer.png")
-      .add("human_mage.png")
-      .add("orc_mage.png")
-      .add("orc_warrior.png")
-      .add("orc_archer.png")
-      .add("carrot.png")
-      .add("door.png")
-      .add("treasure.png")
-      .add("explorer.png")
+      .add("https://emptydoors.vercel.app/spear.png")
+      .add("https://emptydoors.vercel.app/fireball.png")
+      .add("https://emptydoors.vercel.app/arrow.png")
+      .add("https://emptydoors.vercel.app/axe.png")
+      .add("https://emptydoors.vercel.app/elf_archer.png")
+      .add("https://emptydoors.vercel.app/elf_mage.png")
+      .add("https://emptydoors.vercel.app/elf_warrior.png")
+      .add("https://emptydoors.vercel.app/fairy_archer.png")
+      .add("https://emptydoors.vercel.app/fairy_mage.png")
+      .add("https://emptydoors.vercel.app/fairy_warrior.png")
+      .add("https://emptydoors.vercel.app/human_warrior.png")
+      .add("https://emptydoors.vercel.app/human_archer.png")
+      .add("https://emptydoors.vercel.app/human_mage.png")
+      .add("https://emptydoors.vercel.app/orc_mage.png")
+      .add("https://emptydoors.vercel.app/orc_warrior.png")
+      .add("https://emptydoors.vercel.app/orc_archer.png")
+      .add("https://emptydoors.vercel.app/carrot.png")
+      .add("https://emptydoors.vercel.app/door.png")
+      .add("https://emptydoors.vercel.app/treasure.png")
+      .add("https://emptydoors.vercel.app/explorer.png")
       .load(setup);
 
     //Define variables that might be used in more
